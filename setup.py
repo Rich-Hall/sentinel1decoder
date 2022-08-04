@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-  name='Sentinel1Decoder',
+  name='sentinel1Decoder',
   url='https://github.com/Rich-Hall/sentinel1decoder',
   author='Rich Hall',
   author_email='richardhall434@gmail.com',
