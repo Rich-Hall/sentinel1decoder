@@ -9,4 +9,5 @@ setup(
   version='0.1'
   license='GPL-3.0'
   description='A python decoder for ESA Sentinel-1 Level0 files'
+  long_description=open('README.txt').read()
 )
