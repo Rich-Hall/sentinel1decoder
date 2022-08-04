@@ -4,6 +4,7 @@ setup(
   name='Sentinel1Decoder'
   url='https://github.com/Rich-Hall/sentinel1decoder'
   author='Rich Hall'
+  author_email='richardhall434@gmail.com'
   packages='sentinel1decoder'
   install_requires=['numpy', 'pandas']
   version='0.1'
