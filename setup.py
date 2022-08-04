@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-  name='sentinel1Decoder',
+  name='sentinel1decoder',
   url='https://github.com/Rich-Hall/sentinel1decoder',
   author='Rich Hall',
   author_email='richardhall434@gmail.com',
