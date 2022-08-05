@@ -4,7 +4,7 @@ Created on Thu Jun 30 18:39:18 2022.
 
 @author: richa
 """
-f_ref = 37.53472224  # Constant used to scale several data fields
+f_ref = 37.53472224 * 1e6  # Constant used to scale several data fields
 
 speed_of_light = 299792458
 
