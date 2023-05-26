@@ -4,50 +4,110 @@ Created on Thu Jun 30 18:39:18 2022.
 
 @author: richa
 """
-f_ref = 37.53472224 * 1e6  # Constant used to scale several data fields
+F_REF = 37.53472224 * 1e6  # Constant used to scale several data fields
 
 speed_of_light = 299792458
 
+# Packet data output dataframe field names
+PACKET_VER_NUM_FIELD_NAME = 'Packet Version Number'
+PACKET_TYPE_FIELD_NAME = 'Packet Type'
+SECONDARY_HEADER_FIELD_NAME = 'Secondary Header Flag'
+PID_FIELD_NAME = 'PID'
+PCAT_FIELD_NAME = 'PCAT'
+SEQUENCE_FLAGS_FIELD_NAME = 'Sequence Flags'
+PACKET_SEQUENCE_COUNT_FIELD_NAME = 'Packet Sequence Count'
+PACKET_DATA_LENGTH_FIELD_NAME = 'Packet Data Length'
+COARSE_TIME_FIELD_NAME = 'Coarse Time'
+FINE_TIME_FIELD_NAME = 'Fine Time'
+SYNC_FIELD_NAME = 'Sync'
+DATA_TAKE_ID_FIELD_NAME = 'Data Take ID'
+ECC_NUM_FIELD_NAME = 'ECC Number'
+TEST_MODE_FIELD_NAME = 'Test Mode'
+RX_CHAN_ID_FIELD_NAME = 'Rx Channel ID'
+INSTRUMENT_CONFIG_ID_FIELD_NAME = 'Instrument Configuration ID'
+SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME = 'Sub-commutated Ancilliary Data Word Index'
+SUBCOM_ANC_DATA_WORD_FIELD_NAME = 'Sub-commutated Ancilliary Data Word'
+SPACE_PACKET_COUNT_FIELD_NAME = 'Space Packet Count'
+PRI_COUNT_FIELD_NAME = 'PRI Count'
+ERROR_FLAG_FIELD_NAME = 'Error Flag'
+BAQ_MODE_FIELD_NAME = 'BAQ Mode'
+BAQ_BLOCK_LEN_FIELD_NAME = 'BAQ Block Length'
+RANGE_DEC_FIELD_NAME = 'Range Decimation'
+RX_GAIN_FIELD_NAME = 'Rx Gain'
+TX_RAMP_RATE_FIELD_NAME = 'Tx Ramp Rate'
+TX_PULSE_START_FREQ_FIELD_NAME = 'Tx Pulse Start Frequency'
+TX_PULSE_LEN_FIELD_NAME = 'Tx Pulse Length'
+RANK_FIELD_NAME = 'Rank'
+PRI_FIELD_NAME = 'PRI'
+SWST_FIELD_NAME = 'SWST'
+SWL_FIELD_NAME = 'SWL'
+SAS_SSB_FLAG_FIELD_NAME = 'SAS SSB Flag'
+POLARIZATION_FIELD_NAME = 'Polarisation' # Can I irritate Americans and Brits AT THE SAME TIME?!
+TEMP_COMP_FIELD_NAME = 'Temperature Compensation'
+CAL_MODE_FIELD_NAME = 'Calibration Mode'
+TX_PULSE_NUM_FIELD_NAME = 'Tx Pulse Number'
+SIGNAL_TYPE_FIELD_NAME = 'Signal Type'
+SWAP_FLAG_FIELD_NAME = 'Swap Flag'
+SWATH_NUM_FIELD_NAME = 'Swath Number'
+NUM_QUADS_FIELD_NAME = 'Number of Quads'
+
+# Subcommed data output dataframe field names
+X_POS_FIELD_NAME = "X-axis position ECEF"
+Y_POS_FIELD_NAME = "Y-axis position ECEF"
+Z_POS_FIELD_NAME = "Z-axis position ECEF"
+X_VEL_FIELD_NAME = "X-axis velocity ECEF"
+Y_VEL_FIELD_NAME = "Y-axis velocity ECEF"
+Z_VEL_FIELD_NAME = "Z-axis velocity ECEF"
+POD_SOLN_DATA_TIMESTAMP_FIELD_NAME = "POD Solution Data Timestamp"
+Q0_FIELD_NAME = "Q0 Attitude Quaternion"
+Q1_FIELD_NAME = "Q1 Attitude Quaternion"
+Q2_FIELD_NAME = "Q2 Attitude Quaternion"
+Q3_FIELD_NAME = "Q3 Attitude Quaternion"
+X_ANG_RATE_FIELD_NAME = "Omega-X Angular Rate"
+Y_ANG_RATE_FIELD_NAME = "Omega-Y Angular Rate"
+Z_ANG_RATE_FIELD_NAME = "Omega-Z Angular Rate"
+ATTITUDE_DATA_TIMESTAMP_FIELD_NAME = "Attitude Data Timestamp"
+
 output_fieldnames = [
-    'Packet Version Number',
-    'Packet Type',
-    'Secondary Header Flag',
-    'PID',
-    'PCAT',
-    'Sequence Flags',
-    'Packet Sequence Count',
-    'Packet Data Length',
-    'Coarse Time',
-    'Fine Time',
-    'Sync',
-    'Data Take ID',
-    'ECC Number',
-    'Test Mode',
-    'Rx Channel ID',
-    'Instrument Configuration ID',
-    'Sub-commutated Ancilliary Data Word Index',
-    'Sub-commutated Ancilliary Data Word',
-    'Space Packet Count',
-    'PRI Count',
-    'Error Flag',
-    'BAQ Mode',
-    'BAQ Block Length',
-    'Range Decimation',
-    'Rx Gain',
-    'Tx Ramp Rate',
-    'Tx Pulse Start Frequency',
-    'Tx Pulse Length',
-    'Rank',
-    'PRI',
-    'SWST',
-    'SWL',
-    'SAS SSB Flag',
-    'Polarisation',
-    'Temperature Compensation',
-    'Calibration Mode',
-    'Tx Pulse Number',
-    'Signal Type',
-    'Swap Flag',
-    'Swath Number',
-    'Number of Quads'
-    ]
+    PACKET_VER_NUM_FIELD_NAME,
+    PACKET_TYPE_FIELD_NAME,
+    SECONDARY_HEADER_FIELD_NAME,
+    PID_FIELD_NAME,
+    PCAT_FIELD_NAME,
+    SEQUENCE_FLAGS_FIELD_NAME,
+    PACKET_SEQUENCE_COUNT_FIELD_NAME,
+    PACKET_DATA_LENGTH_FIELD_NAME,
+    COARSE_TIME_FIELD_NAME,
+    FINE_TIME_FIELD_NAME,
+    SYNC_FIELD_NAME,
+    DATA_TAKE_ID_FIELD_NAME,
+    ECC_NUM_FIELD_NAME,
+    TEST_MODE_FIELD_NAME,
+    RX_CHAN_ID_FIELD_NAME,
+    INSTRUMENT_CONFIG_ID_FIELD_NAME,
+    SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME,
+    SUBCOM_ANC_DATA_WORD_FIELD_NAME,
+    SPACE_PACKET_COUNT_FIELD_NAME,
+    PRI_COUNT_FIELD_NAME,
+    ERROR_FLAG_FIELD_NAME,
+    BAQ_MODE_FIELD_NAME,
+    BAQ_BLOCK_LEN_FIELD_NAME,
+    RANGE_DEC_FIELD_NAME,
+    RX_GAIN_FIELD_NAME,
+    TX_RAMP_RATE_FIELD_NAME,
+    TX_PULSE_START_FREQ_FIELD_NAME,
+    TX_PULSE_LEN_FIELD_NAME,
+    RANK_FIELD_NAME,
+    PRI_FIELD_NAME,
+    SWST_FIELD_NAME,
+    SWL_FIELD_NAME,
+    SAS_SSB_FLAG_FIELD_NAME,
+    POLARIZATION_FIELD_NAME,
+    TEMP_COMP_FIELD_NAME,
+    CAL_MODE_FIELD_NAME,
+    TX_PULSE_NUM_FIELD_NAME,
+    SIGNAL_TYPE_FIELD_NAME,
+    SWAP_FLAG_FIELD_NAME,
+    SWATH_NUM_FIELD_NAME,
+    NUM_QUADS_FIELD_NAME,
+]

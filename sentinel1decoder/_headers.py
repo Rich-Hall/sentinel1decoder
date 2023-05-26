@@ -5,7 +5,7 @@ Created on Thu Jun 30 18:34:01 2022.
 @author: richa
 """
 import logging
-from sentinel1decoder import constants
+from sentinel1decoder.constants import *
 
 
 def decode_primary_header(header_bytes):
@@ -49,14 +49,14 @@ def decode_primary_header(header_bytes):
         logging.error("Packet length is not a multiple of 4 bytes")
 
     output_dictionary = {
-        "Packet Version Number": packet_version_number,
-        "Packet Type": packet_type,
-        "Secondary Header Flag": secondary_header_flag,
-        "PID": process_id,
-        "PCAT": packet_category,
-        "Sequence Flags": sequence_flags,
-        "Packet Sequence Count": packet_sequence_count,
-        "Packet Data Length": packet_data_length
+        PACKET_VER_NUM_FIELD_NAME: packet_version_number,
+        PACKET_TYPE_FIELD_NAME: packet_type,
+        SECONDARY_HEADER_FIELD_NAME: secondary_header_flag,
+        PID_FIELD_NAME: process_id,
+        PCAT_FIELD_NAME: packet_category,
+        SEQUENCE_FLAGS_FIELD_NAME: sequence_flags,
+        PACKET_SEQUENCE_COUNT_FIELD_NAME: packet_sequence_count,
+        PACKET_DATA_LENGTH_FIELD_NAME: packet_data_length
     }
 
     return output_dictionary
@@ -91,8 +91,8 @@ def decode_secondary_header(header_bytes):
     fine_time = (int.from_bytes(header_bytes[4:6], 'big') + 0.5)*(2**(-16))
 
     output_dictionary = {
-        "Coarse Time": coarse_time,
-        "Fine Time": fine_time
+        COARSE_TIME_FIELD_NAME: coarse_time,
+        FINE_TIME_FIELD_NAME: fine_time
     }
 
     # ---------------------------------------------------------
@@ -111,12 +111,12 @@ def decode_secondary_header(header_bytes):
     instrument_config_id = int.from_bytes(header_bytes[16:20], 'big')
 
     output_dictionary.update({
-        "Sync": sync,
-        "Data Take ID": data_take_id,
-        "ECC Number": ecc_number,
-        "Test Mode": test_mode,
-        "Rx Channel ID": rx_channel_id,
-        "Instrument Configuration ID": instrument_config_id
+        SYNC_FIELD_NAME: sync,
+        DATA_TAKE_ID_FIELD_NAME: data_take_id,
+        ECC_NUM_FIELD_NAME: ecc_number,
+        TEST_MODE_FIELD_NAME: test_mode,
+        RX_CHAN_ID_FIELD_NAME: rx_channel_id,
+        INSTRUMENT_CONFIG_ID_FIELD_NAME: instrument_config_id
     })
 
     if sync != 0x352EF853:
@@ -134,8 +134,8 @@ def decode_secondary_header(header_bytes):
     subcom_data_word = int.from_bytes(header_bytes[21:23], 'big')
 
     output_dictionary.update({
-        "Sub-commutated Ancilliary Data Word Index": subcom_data_word_ind,
-        "Sub-commutated Ancilliary Data Word": subcom_data_word
+        SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME: subcom_data_word_ind,
+        SUBCOM_ANC_DATA_WORD_FIELD_NAME: subcom_data_word
     })
 
     # ---------------------------------------------------------
@@ -146,8 +146,8 @@ def decode_secondary_header(header_bytes):
     pri_count = int.from_bytes(header_bytes[27:31], 'big')
 
     output_dictionary.update({
-        "Space Packet Count": space_packet_count,
-        "PRI Count": pri_count
+        SPACE_PACKET_COUNT_FIELD_NAME: space_packet_count,
+        PRI_COUNT_FIELD_NAME: pri_count
     })
 
     # ---------------------------------------------------------
@@ -167,27 +167,27 @@ def decode_secondary_header(header_bytes):
 
     tmp16 = int.from_bytes(header_bytes[36:38], 'big')
     txprr_sign = ((-1)**(1-(tmp16 >> 15)))
-    txprr = txprr_sign*(tmp16 & 0x7fff)*(constants.f_ref**2)/(2**21)
+    txprr = txprr_sign*(tmp16 & 0x7fff)*(F_REF**2)/(2**21)
 
     tmp16 = int.from_bytes(header_bytes[38:40], 'big')
-    txpsf_additive = (txprr/(4*constants.f_ref))
+    txpsf_additive = (txprr/(4*F_REF))
     txpsf_sign = ((-1)**(1-(tmp16 >> 15)))
-    txpsf = txpsf_additive+txpsf_sign*(tmp16 & 0x7fff)*constants.f_ref/(2**14)
+    txpsf = txpsf_additive+txpsf_sign*(tmp16 & 0x7fff)*F_REF/(2**14)
 
     tmp24 = int.from_bytes(header_bytes[40:43], 'big')
-    tx_pulse_length = tmp24/constants.f_ref
+    tx_pulse_length = tmp24/F_REF
 
     # Byte 43 bits 0-2 are unused
     rank = header_bytes[43] & 0x1f  # Byte 43 bits 3-7
 
     tmp24 = int.from_bytes(header_bytes[44:47], 'big')
-    pri = tmp24 / constants.f_ref
+    pri = tmp24 / F_REF
 
     tmp24 = int.from_bytes(header_bytes[47:50], 'big')
-    sampling_window_start_time = tmp24 / constants.f_ref
+    sampling_window_start_time = tmp24 / F_REF
 
     tmp24 = int.from_bytes(header_bytes[50:53], 'big')
-    sampling_window_length = tmp24/constants.f_ref
+    sampling_window_length = tmp24/F_REF
 
     sas_ssbflag = header_bytes[53] >> 7  # Byte 53 Bit 0
     polarisation = (header_bytes[53] >> 4) & 0x07  # Byte 53 Bits 1-3
@@ -209,26 +209,26 @@ def decode_secondary_header(header_bytes):
     swath_number = header_bytes[58]
 
     output_dictionary.update({
-        "Error Flag": error_flag,
-        "BAQ Mode": baq_mode,
-        "BAQ Block Length": baq_block_length,
-        "Range Decimation": range_decimation,
-        "Rx Gain": rx_gain,
-        "Tx Ramp Rate": txprr,
-        "Tx Pulse Start Frequency": txpsf,
-        "Tx Pulse Length": tx_pulse_length,
-        "Rank": rank,
-        "PRI": pri,
-        "SWST": sampling_window_start_time,
-        "SWL": sampling_window_length,
-        "SAS SSB Flag": sas_ssbflag,
-        "Polarisation": polarisation,
-        "Temperature Compensation": temperature_comp,
-        "Calibration Mode": calibration_mode,
-        "Tx Pulse Number": tx_pulse_number,
-        "Signal Type": signal_type,
-        "Swap Flag": swap_flag,
-        "Swath Number": swath_number
+        ERROR_FLAG_FIELD_NAME: error_flag,
+        BAQ_MODE_FIELD_NAME: baq_mode,
+        BAQ_BLOCK_LEN_FIELD_NAME: baq_block_length,
+        RANGE_DEC_FIELD_NAME: range_decimation,
+        RX_GAIN_FIELD_NAME: rx_gain,
+        TX_RAMP_RATE_FIELD_NAME: txprr,
+        TX_PULSE_START_FREQ_FIELD_NAME: txpsf,
+        TX_PULSE_LEN_FIELD_NAME: tx_pulse_length,
+        RANK_FIELD_NAME: rank,
+        PRI_FIELD_NAME: pri,
+        SWST_FIELD_NAME: sampling_window_start_time,
+        SWL_FIELD_NAME: sampling_window_length,
+        SAS_SSB_FLAG_FIELD_NAME: sas_ssbflag,
+        POLARIZATION_FIELD_NAME: polarisation,
+        TEMP_COMP_FIELD_NAME: temperature_comp,
+        CAL_MODE_FIELD_NAME: calibration_mode,
+        TX_PULSE_NUM_FIELD_NAME: tx_pulse_number,
+        SIGNAL_TYPE_FIELD_NAME: signal_type,
+        SWAP_FLAG_FIELD_NAME: swap_flag,
+        SWATH_NUM_FIELD_NAME: swath_number
     })
 
     # ---------------------------------------------------------
@@ -239,7 +239,7 @@ def decode_secondary_header(header_bytes):
     # The byte at packet_data[61] is unused
 
     output_dictionary.update({
-        "Number of Quads": number_of_quads
+        NUM_QUADS_FIELD_NAME: number_of_quads
     })
 
     # ---------------------------------------------------------
