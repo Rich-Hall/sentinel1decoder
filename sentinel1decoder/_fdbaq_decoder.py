@@ -9,6 +9,11 @@ import logging
 
 from sentinel1decoder._sample_code import SampleCode
 
+_TREE_BRC_ZERO = (0, (1, (2, 3)))
+_TREE_BRC_ONE = (0, (1, (2, (3, 4))))
+_TREE_BRC_TWO = (0, (1, (2, (3, (4, (5, 6))))))
+_TREE_BRC_THREE = ((0, 1), (2, (3, (4, (5, (6, (7, (8, 9))))))))
+_TREE_BRC_FOUR = ((0, (1, 2)), ((3, 4), ((5, 6), (7, (8, (9, ((10, 11), ((12, 13), (14, 15)))))))))
 
 class FDBAQDecoder:
     """Extracts sample codes from Sentinel-1 packets."""
@@ -24,22 +29,18 @@ class FDBAQDecoder:
         self._brc = []
         self._thidx = []
 
-        _tree_brc_zero = (0, (1, (2, 3)))
-        _tree_brc_one = (0, (1, (2, (3, 4))))
-        _tree_brc_two = (0, (1, (2, (3, (4, (5, 6))))))
-        _tree_brc_three = ((0, 1), (2, (3, (4, (5, (6, (7, (8, 9))))))))
-        _tree_brc_four = ((0, (1, 2)), ((3, 4), ((5, 6), (7, (8, (9, ((10, 11), ((12, 13), (14, 15)))))))))
-
         self._i_evens_scodes = []
         self._i_odds_scodes = []
         self._q_evens_scodes = []
         self._q_odds_scodes = []
+        
+        logging.debug(f"Created FDBAQ decoder. Numquads={num_quads} NumBAQblocks={self._num_baq_blocks}")
 
         # TODO: Lots of repetition here, break into function(s)
         # Channel 1 - IE
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug("Starting IE block %i" % block_index)
+            logging.debug(f"Starting IE block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
 
             # Each Bit Rate Code is in the first three bits of each IE block
             brc = self._read_brc()
@@ -48,17 +49,17 @@ class FDBAQDecoder:
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
             if self._brc[block_index] == 0:
-                this_huffman_tree = _tree_brc_zero
+                this_huffman_tree = _TREE_BRC_ZERO
             elif self._brc[block_index] == 1:
-                this_huffman_tree = _tree_brc_one
+                this_huffman_tree = _TREE_BRC_ONE
             elif self._brc[block_index] == 2:
-                this_huffman_tree = _tree_brc_two
+                this_huffman_tree = _TREE_BRC_TWO
             elif self._brc[block_index] == 3:
-                this_huffman_tree = _tree_brc_three
+                this_huffman_tree = _TREE_BRC_THREE
             elif self._brc[block_index] == 4:
-                this_huffman_tree = _tree_brc_four
+                this_huffman_tree = _TREE_BRC_FOUR
             else:
-                logging.error("Unrecognized BAQ mode code")
+                logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
             for i in range(min(128, self._num_quads-values_processed_count)):
@@ -77,29 +78,31 @@ class FDBAQDecoder:
 
         # Channel 2 - IO
         # Move counters to next 16-bit word boundary
+        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
-
+        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug("Starting IO block %i" % block_index)
+            logging.debug(f"Starting IO block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
 
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
             if self._brc[block_index] == 0:
-                this_huffman_tree = _tree_brc_zero
+                this_huffman_tree = _TREE_BRC_ZERO
             elif self._brc[block_index] == 1:
-                this_huffman_tree = _tree_brc_one
+                this_huffman_tree = _TREE_BRC_ONE
             elif self._brc[block_index] == 2:
-                this_huffman_tree = _tree_brc_two
+                this_huffman_tree = _TREE_BRC_TWO
             elif self._brc[block_index] == 3:
-                this_huffman_tree = _tree_brc_three
+                this_huffman_tree = _TREE_BRC_THREE
             elif self._brc[block_index] == 4:
-                this_huffman_tree = _tree_brc_four
+                this_huffman_tree = _TREE_BRC_FOUR
             else:
-                logging.error("Unrecognized BAQ mode code")
+                logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
             for i in range(min(128, self._num_quads-values_processed_count)):
@@ -118,13 +121,16 @@ class FDBAQDecoder:
 
         # Channel 3 -QE
         # Move counters to next 16-bit word boundary
+        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
+        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug("Starting QE block %i" % block_index)
+            logging.debug(f"Starting QE block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
 
             # Each THIDX Code is in the first eight bits of each IE block
             this_thidx = self._read_thidx()
@@ -133,17 +139,17 @@ class FDBAQDecoder:
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
             if self._brc[block_index] == 0:
-                this_huffman_tree = _tree_brc_zero
+                this_huffman_tree = _TREE_BRC_ZERO
             elif self._brc[block_index] == 1:
-                this_huffman_tree = _tree_brc_one
+                this_huffman_tree = _TREE_BRC_ONE
             elif self._brc[block_index] == 2:
-                this_huffman_tree = _tree_brc_two
+                this_huffman_tree = _TREE_BRC_TWO
             elif self._brc[block_index] == 3:
-                this_huffman_tree = _tree_brc_three
+                this_huffman_tree = _TREE_BRC_THREE
             elif self._brc[block_index] == 4:
-                this_huffman_tree = _tree_brc_four
+                this_huffman_tree = _TREE_BRC_FOUR
             else:
-                logging.error("Unrecognized BAQ mode code")
+                logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
             for i in range(min(128, self._num_quads-values_processed_count)):
@@ -162,28 +168,31 @@ class FDBAQDecoder:
 
         # Channel 4 - QO
         # Move counters to next 16-bit word boundary
+        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
+        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug("Starting QO block %i" % block_index)
+            logging.debug(f"Starting QO block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
 
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
             if self._brc[block_index] == 0:
-                this_huffman_tree = _tree_brc_zero
+                this_huffman_tree = _TREE_BRC_ZERO
             elif self._brc[block_index] == 1:
-                this_huffman_tree = _tree_brc_one
+                this_huffman_tree = _TREE_BRC_ONE
             elif self._brc[block_index] == 2:
-                this_huffman_tree = _tree_brc_two
+                this_huffman_tree = _TREE_BRC_TWO
             elif self._brc[block_index] == 3:
-                this_huffman_tree = _tree_brc_three
+                this_huffman_tree = _TREE_BRC_THREE
             elif self._brc[block_index] == 4:
-                this_huffman_tree = _tree_brc_four
+                this_huffman_tree = _TREE_BRC_FOUR
             else:
-                logging.error("Unrecognized BAQ mode code")
+                logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
             for i in range(min(128, self._num_quads-values_processed_count)):

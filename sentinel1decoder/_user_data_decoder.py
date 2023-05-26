@@ -15,7 +15,7 @@ class user_data_decoder:
     def __init__(self, data, baq_mode, num_quads):
         if baq_mode not in (0, 3, 4, 5, 12, 13, 14):
             # TODO: Throw a proper error here
-            logging.error("Unrecognized BAQ mode")
+            logging.error(f"Unrecognized BAQ mode: {baq_mode}")
 
         self.data = data
         self.baq_mode = baq_mode
@@ -59,6 +59,7 @@ class user_data_decoder:
         elif self.baq_mode in (3, 4, 5):
             # TODO - Implement Data format type C decoding.
             logging.error("Attempted to decode data format C")
+            raise NotImplementedError("Data format C is not implemented yet!")
 
         elif self.baq_mode in (12, 13, 14):
             # FDBAQ data uses various types of Huffman encoding.
@@ -69,8 +70,8 @@ class user_data_decoder:
             brcs = scode_extractor.get_brcs
             thidxs = scode_extractor.get_thidxs
 
-            logging.debug("Read BRCs: %s" % brcs)
-            logging.debug("Read THIDXs: %s" % thidxs)
+            logging.debug(f"Read BRCs: {brcs}")
+            logging.debug(f"Read THIDXs: {thidxs}")
 
             # Huffman-decoded sample codes are grouped into blocks, and can be
             # reconstructed using various lookup tables which cross-reference
@@ -89,7 +90,7 @@ class user_data_decoder:
             )
 
         else:
-            logging.error("Attempted to decode using invalid BAQ mode")
+            logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
 
         # Re-order the even-indexed and odd-indexed sample channels here.
         decoded_data = []

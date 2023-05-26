@@ -104,10 +104,12 @@ class Level0Decoder:
         # TODO: More rigorous checks here
         # TODO: Fix checks when only one packet supplied as input_header
         # TODO: Report progress since this takes a long time
-        if not len(input_header["Swath Number"].unique()) == 1:
-            logging.error("Supplied mismatched header info")
-        if not len(input_header["Number of Quads"].unique()) == 1:
-            logging.error("Supplied mismatched header info")
+        swath_numbers = input_header["Swath Number"].unique()
+        num_quads = input_header["Number of Quads"].unique()
+        if not len(swath_numbers) == 1:
+            logging.error(f"Supplied mismatched header info - too many swath numbers {swath_numbers}")
+        if not len(num_quads) == 1:
+            logging.error(f"Supplied mismatched header info - too many number of quads {num_quads}")
 
         packet_counter = 0
         packets_to_process = len(input_header)
@@ -134,15 +136,19 @@ class Level0Decoder:
                 secondary_hdr = hdrs.decode_secondary_header(pkt_data[:62])
                 this_header.update(secondary_hdr)
 
-                if (input_header == this_header).all(1).any():
-                    logging.debug(
-                        "Decoding data from packet: %s" % this_header
-                    )
-
-                    baqmod = this_header["BAQ Mode"]
-                    data_decoder = user_data_decoder(pkt_data[62:], baqmod, nq)
-                    this_data_packet = data_decoder.decode()
-                    output_data[packet_counter, :] = this_data_packet
+                # Comparing space packet count is faster than comparing entire row
+                if this_header['Space Packet Count'] in input_header['Space Packet Count'].values:
+                    logging.debug(f"Decoding data from packet: {this_header}")
+                    try:
+                        baqmod = this_header["BAQ Mode"]
+                        nq = this_header["Number of Quads"]
+                        data_decoder = user_data_decoder(pkt_data[62:], baqmod, nq)
+                        this_data_packet = data_decoder.decode()
+                        output_data[packet_counter, :] = this_data_packet
+                    except Exception as e:
+                        logging.error(f"Failed to process packet {packet_counter} with Space Packet Count {this_header['Space Packet Count']}\n{e}")
+                        output_data[packet_counter, :] = 0
+                                      
 
                     logging.debug("Finished decoding packet data")
 
