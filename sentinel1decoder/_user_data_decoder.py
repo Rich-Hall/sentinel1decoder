@@ -1,8 +1,8 @@
 import logging
 
-from sentinel1decoder import _sample_value_reconstruction as rec
-from sentinel1decoder._fdbaq_decoder import FDBAQDecoder
-from sentinel1decoder._sample_code_bypass import decode_bypass_data
+from . import _sample_value_reconstruction as rec
+from ._fdbaq_decoder import FDBAQDecoder
+from ._sample_code_bypass import decode_bypass_data
 
 
 class user_data_decoder:

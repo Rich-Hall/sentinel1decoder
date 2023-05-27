@@ -7,39 +7,39 @@ Created on Tue Jul 12 17:36:54 2022.
 import struct
 import numpy as np
 import pandas as pd
-from sentinel1decoder.constants import *
+
+from . import constants as cnst
 
 def range_dec_to_sample_rate(rgdec_code):
     if rgdec_code == 0:
-        return 3 * F_REF
+        return 3 * cnst.F_REF
     elif rgdec_code == 1:
-        return (8/3) * F_REF
+        return (8/3) * cnst.F_REF
     elif rgdec_code == 3:
-        return (20/9) * F_REF
+        return (20/9) * cnst.F_REF
     elif rgdec_code == 4:
-        return (16/9) * F_REF
+        return (16/9) * cnst.F_REF
     elif rgdec_code == 5:
-        return (3/2) * F_REF
+        return (3/2) * cnst.F_REF
     elif rgdec_code == 6:
-        return (4/3) * F_REF
+        return (4/3) * cnst.F_REF
     elif rgdec_code == 7:
-        return (2/3) * F_REF
+        return (2/3) * cnst.F_REF
     elif rgdec_code == 8:
-        return (12/7) * F_REF
+        return (12/7) * cnst.F_REF
     elif rgdec_code == 9:
-        return (5/4) * F_REF
+        return (5/4) * cnst.F_REF
     elif rgdec_code == 10:
-        return (6/13) * F_REF
+        return (6/13) * cnst.F_REF
     elif rgdec_code == 11:
-        return (16/11) * F_REF
+        return (16/11) * cnst.F_REF
     else:
-        # TODO: Throw error
-        return 0
+        raise Exception(f"Invalid range decimation code {rgdec_code} supplied - valid codes are 0-11")
 
 
 def read_subcommed_data(df):
-    index_col = SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME
-    data_col = SUBCOM_ANC_DATA_WORD_FIELD_NAME
+    index_col = cnst.SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME
+    data_col = cnst.SUBCOM_ANC_DATA_WORD_FIELD_NAME
     start_indices = df.index[df[index_col] == 1]
     output_dict_list = []
 
@@ -72,13 +72,13 @@ def read_subcommed_data(df):
                 pvt_t = pvt_t1 + pvt_t2 + pvt_t3 + pvt_t4
 
                 output_dictionary = {
-                    X_POS_FIELD_NAME: x,
-                    Y_POS_FIELD_NAME: y,
-                    Z_POS_FIELD_NAME: z,
-                    X_VEL_FIELD_NAME: x_vel,
-                    Y_VEL_FIELD_NAME: y_vel,
-                    Z_VEL_FIELD_NAME: z_vel,
-                    POD_SOLN_DATA_TIMESTAMP_FIELD_NAME: pvt_t
+                    cnst.X_POS_FIELD_NAME: x,
+                    cnst.Y_POS_FIELD_NAME: y,
+                    cnst.Z_POS_FIELD_NAME: z,
+                    cnst.X_VEL_FIELD_NAME: x_vel,
+                    cnst.Y_VEL_FIELD_NAME: y_vel,
+                    cnst.Z_VEL_FIELD_NAME: z_vel,
+                    cnst.POD_SOLN_DATA_TIMESTAMP_FIELD_NAME: pvt_t
                 }
 
                 q0_bytes = struct.pack('>HH', d[22], d[23])
@@ -104,14 +104,14 @@ def read_subcommed_data(df):
                 att_t = att_t1 + att_t2 + att_t3 + att_t4
 
                 output_dictionary.update({
-                    Q0_FIELD_NAME: q0,
-                    Q1_FIELD_NAME: q1,
-                    Q2_FIELD_NAME: q2,
-                    Q3_FIELD_NAME: q3,
-                    X_ANG_RATE_FIELD_NAME: x_ang_rate,
-                    Y_ANG_RATE_FIELD_NAME: y_ang_rate,
-                    Z_ANG_RATE_FIELD_NAME: z_ang_rate,
-                    ATTITUDE_DATA_TIMESTAMP_FIELD_NAME: att_t
+                    cnst.Q0_FIELD_NAME: q0,
+                    cnst.Q1_FIELD_NAME: q1,
+                    cnst.Q2_FIELD_NAME: q2,
+                    cnst.Q3_FIELD_NAME: q3,
+                    cnst.X_ANG_RATE_FIELD_NAME: x_ang_rate,
+                    cnst.Y_ANG_RATE_FIELD_NAME: y_ang_rate,
+                    cnst.Z_ANG_RATE_FIELD_NAME: z_ang_rate,
+                    cnst.ATTITUDE_DATA_TIMESTAMP_FIELD_NAME: att_t
                 })
 
                 output_dict_list.append(output_dictionary)

@@ -8,9 +8,9 @@ import logging
 import numpy as np
 import pandas as pd
 
-from sentinel1decoder import _headers as hdrs
-from sentinel1decoder._user_data_decoder import user_data_decoder
-from sentinel1decoder.constants import *
+from . import _headers as hdrs
+from ._user_data_decoder import user_data_decoder
+from . import constants as cnst
 
 
 class Level0Decoder:
@@ -64,7 +64,7 @@ class Level0Decoder:
                 # ---------------------------------------------------------
                 # First 62 bytes contain the PACKET SECONDARY HEADER
 
-                pkt_data_len = output_dictionary_row[PACKET_DATA_LENGTH_FIELD_NAME]
+                pkt_data_len = output_dictionary_row[cnst.PACKET_DATA_LEN_FIELD_NAME]
                 packet_data = f.read(pkt_data_len)
                 secondary_hdr = hdrs.decode_secondary_header(packet_data[:62])
                 output_dictionary_row.update(secondary_hdr)
@@ -105,8 +105,8 @@ class Level0Decoder:
         # TODO: More rigorous checks here
         # TODO: Fix checks when only one packet supplied as input_header
         # TODO: Report progress since this takes a long time
-        swath_numbers = input_header[SWATH_NUM_FIELD_NAME].unique()
-        num_quads = input_header[NUM_QUADS_FIELD_NAME].unique()
+        swath_numbers = input_header[cnst.SWATH_NUM_FIELD_NAME].unique()
+        num_quads = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()
         if not len(swath_numbers) == 1:
             logging.error(f"Supplied mismatched header info - too many swath numbers {swath_numbers}")
         if not len(num_quads) == 1:
@@ -114,7 +114,7 @@ class Level0Decoder:
 
         packet_counter = 0
         packets_to_process = len(input_header)
-        nq = input_header[NUM_QUADS_FIELD_NAME].unique()[0]
+        nq = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()[0]
 
         output_data = np.zeros([packets_to_process, nq * 2], dtype=(complex))
 
@@ -131,23 +131,23 @@ class Level0Decoder:
 
                 # We require several variables from the header
                 this_header = hdrs.decode_primary_header(data_buffer)
-                pkt_data_len = this_header[PACKET_DATA_LENGTH_FIELD_NAME]
+                pkt_data_len = this_header[cnst.PACKET_DATA_LEN_FIELD_NAME]
 
                 pkt_data = f.read(pkt_data_len)
                 secondary_hdr = hdrs.decode_secondary_header(pkt_data[:62])
                 this_header.update(secondary_hdr)
 
                 # Comparing space packet count is faster than comparing entire row
-                if this_header[SPACE_PACKET_COUNT_FIELD_NAME] in input_header[SPACE_PACKET_COUNT_FIELD_NAME].values:
+                if this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME] in input_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME].values:
                     logging.debug(f"Decoding data from packet: {this_header}")
                     try:
-                        baqmod = this_header[BAQ_MODE_FIELD_NAME]
-                        nq = this_header[NUM_QUADS_FIELD_NAME]
+                        baqmod = this_header[cnst.BAQ_MODE_FIELD_NAME]
+                        nq = this_header[cnst.NUM_QUADS_FIELD_NAME]
                         data_decoder = user_data_decoder(pkt_data[62:], baqmod, nq)
                         this_data_packet = data_decoder.decode()
                         output_data[packet_counter, :] = this_data_packet
                     except Exception as e:
-                        logging.error(f"Failed to process packet {packet_counter} with Space Packet Count {this_header[SPACE_PACKET_COUNT_FIELD_NAME]}\n{e}")
+                        logging.error(f"Failed to process packet {packet_counter} with Space Packet Count {this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]}\n{e}")
                         output_data[packet_counter, :] = 0
                                       
 

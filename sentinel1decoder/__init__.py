@@ -1,5 +1,5 @@
 #
 
-from sentinel1decoder.l0decoder import Level0Decoder
-import sentinel1decoder.utilities
-import sentinel1decoder.constants
+from .l0decoder import Level0Decoder
+from . import utilities
+from . import constants

@@ -7,9 +7,21 @@ Created on Fri Jul  1 10:51:14 2022.
 import math
 import numpy as np
 
+def _ten_bit_unsigned_to_signed_int(ten_bit: int) -> int:
+    """
+    Convert a ten-bit unsigned int to a standard signed int.
+    
+    Args:
+        ten_bit: Raw ten-bit int extracted from packet.
+    
+    Returns:
+        A standard signed integer
+    """
+    # First bit is the sign, remaining 9 encoide the number
+    sign = (-1) ** ((ten_bit >> 9) & 0x1)
+    return sign * (ten_bit & 0x1ff)
 
-# TODO: abstract this function to use n-bit words rather than hardcoding 10
-def decode_bypass_data(data, num_quads):
+def decode_bypass_data(data, num_quads: int):
     """Decode user data format type A and B (“Bypass” or “Decimation Only”).
 
     Data is simply encoded in a series of 10-bit words.
@@ -55,25 +67,25 @@ def decode_bypass_data(data, num_quads):
     while index_10bit < num_quads:
         if index_10bit < num_quads:
             s_code = (data[index_8bit] << 2 | data[index_8bit+1] >> 6) & 1023
-            i_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+1] << 4 | data[index_8bit+2] >> 4) & 1023
-            i_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+2] << 6 | data[index_8bit+3] >> 2) & 1023
-            i_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+3] << 8 | data[index_8bit+4] >> 0) & 1023
-            i_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
@@ -85,25 +97,25 @@ def decode_bypass_data(data, num_quads):
     while index_10bit < num_quads:
         if index_10bit < num_quads:
             s_code = (data[index_8bit] << 2 | data[index_8bit+1] >> 6) & 1023
-            i_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+1] << 4 | data[index_8bit+2] >> 4) & 1023
-            i_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+2] << 6 | data[index_8bit+3] >> 2) & 1023
-            i_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+3] << 8 | data[index_8bit+4] >> 0) & 1023
-            i_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
@@ -115,25 +127,25 @@ def decode_bypass_data(data, num_quads):
     while index_10bit < num_quads:
         if index_10bit < num_quads:
             s_code = (data[index_8bit] << 2 | data[index_8bit+1] >> 6) & 1023
-            q_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+1] << 4 | data[index_8bit+2] >> 4) & 1023
-            q_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+2] << 6 | data[index_8bit+3] >> 2) & 1023
-            q_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+3] << 8 | data[index_8bit+4] >> 0) & 1023
-            q_evens[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
@@ -145,25 +157,25 @@ def decode_bypass_data(data, num_quads):
     while index_10bit < num_quads:
         if index_10bit < num_quads:
             s_code = (data[index_8bit] << 2 | data[index_8bit+1] >> 6) & 1023
-            q_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+1] << 4 | data[index_8bit+2] >> 4) & 1023
-            q_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+2] << 6 | data[index_8bit+3] >> 2) & 1023
-            q_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break
         if index_10bit < num_quads:
             s_code = (data[index_8bit+3] << 8 | data[index_8bit+4] >> 0) & 1023
-            q_odds[index_10bit] = (-1 * s_code >> 9) * s_code & 0x1ff
+            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
             index_10bit += 1
         else:
             break

@@ -8,7 +8,7 @@ import logging
 
 import numpy as np
 
-import sentinel1decoder._lookup_tables as lookup
+from . import _lookup_tables as lookup
 
 
 def reconstruct_channel_vals(data, block_brcs, block_thidxs, vals_to_process):
