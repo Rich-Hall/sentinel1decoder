@@ -7,6 +7,8 @@ Created on Fri Jul  1 10:51:14 2022.
 import math
 import numpy as np
 
+from typing import Tuple
+
 def _ten_bit_unsigned_to_signed_int(ten_bit: int) -> int:
     """
     Convert a ten-bit unsigned int to a standard signed int.
@@ -21,7 +23,7 @@ def _ten_bit_unsigned_to_signed_int(ten_bit: int) -> int:
     sign = (-1) ** ((ten_bit >> 9) & 0x1)
     return sign * (ten_bit & 0x1ff)
 
-def decode_bypass_data(data, num_quads: int):
+def decode_bypass_data(data: bytes, num_quads: int) -> Tuple[float, float, float, float]:
     """Decode user data format type A and B (“Bypass” or “Decimation Only”).
 
     Data is simply encoded in a series of 10-bit words.

@@ -21,3 +21,6 @@ def test_ten_bit_unsigned_to_signed_int():
 
     # 0101010101
     assert _ten_bit_unsigned_to_signed_int(0x155) == 341
+
+    # 111111111111111111111111111111111111 - too long
+    assert _ten_bit_unsigned_to_signed_int(0xFFFFFFFFFF) == -511

@@ -36,5 +36,5 @@ ephemeris = sentinel1decoder.utilities.read_subcommed_data(df)
 Extract the data payload from the data packets in the file. Takes a Pandas dataframe as an input, and only decodes packets whose header is present in the input dataframe. The intended usage of this is to allow the user to select which packets to decode, rather than having to always decode the full file. For example, to decode the first 100 packets only:
 ```
 selection = df.iloc[0:100]
-iq_array = decoder.decode_file(selection)
+iq_array = decoder.decode_packets(selection)
 ```

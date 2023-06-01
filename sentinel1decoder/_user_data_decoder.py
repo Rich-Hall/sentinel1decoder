@@ -14,8 +14,8 @@ class user_data_decoder:
 
     def __init__(self, data, baq_mode, num_quads):
         if baq_mode not in (0, 3, 4, 5, 12, 13, 14):
-            # TODO: Throw a proper error here
             logging.error(f"Unrecognized BAQ mode: {baq_mode}")
+            raise Exception(f"Unrecognized BAQ mode: {baq_mode}")
 
         self.data = data
         self.baq_mode = baq_mode

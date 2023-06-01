@@ -9,7 +9,7 @@ import logging
 from . import constants as cnst
 
 
-def decode_primary_header(header_bytes):
+def decode_primary_header(header_bytes: bytes) -> dict:
     """Decode the Sentinel-1 Space Packet primary header.
 
     Refer to SAR Space Protocol Data Unit specification document pg.13
@@ -63,22 +63,17 @@ def decode_primary_header(header_bytes):
     return output_dictionary
 
 
-def decode_secondary_header(header_bytes):
+def decode_secondary_header(header_bytes: bytes) -> dict:
     """Decode the Sentinel-1 Space Packet secondary header.
 
     Refer to SAR Space Protocol Data Unit specification document pg.14
     The secondary header consists of exactly 62 bytes.
 
-    Parameters
-    ----------
-    header_bytes : List
-        List of input bytes. Must contain exactly 62 bytes.
+    Args:
+        header_bytes: Set of input bytes. Must contain exactly 62 bytes.
 
-    Returns
-    -------
-    output_dictionary : Dictionary
-        Dictionary of secondary header fields.
-
+    Returns:
+        A dictionary of secondary header fields.
     """
     if not len(header_bytes) == 62:
         logging.ERROR("Secondary header must be exactly 62 bytes")

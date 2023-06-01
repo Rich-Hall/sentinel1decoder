@@ -10,7 +10,17 @@ import pandas as pd
 
 from . import constants as cnst
 
-def range_dec_to_sample_rate(rgdec_code):
+def range_dec_to_sample_rate(rgdec_code: int) -> float:
+    """
+    Convert range decimation code to sample rate.
+
+    Args:
+        rgdec_code: Range decimation code
+
+    Returns:
+        Sample rate for this range decimation code.
+
+    """
     if rgdec_code == 0:
         return 3 * cnst.F_REF
     elif rgdec_code == 1:
@@ -37,7 +47,19 @@ def range_dec_to_sample_rate(rgdec_code):
         raise Exception(f"Invalid range decimation code {rgdec_code} supplied - valid codes are 0-11")
 
 
-def read_subcommed_data(df):
+def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Decode the sub-commutated satellite ephemeris data present in the file.
+    
+    Args:
+        df: Pandas dataframe containing the packet header information from the file.
+
+    Returns:
+        A pandas dataframe containing the decoded sub-commutated acilliary data words.
+    """
+    if df.index.nlevels > 1:
+        df = df.droplevel(cnst.BURST_NUM_FIELD_NAME)
+
     index_col = cnst.SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME
     data_col = cnst.SUBCOM_ANC_DATA_WORD_FIELD_NAME
     start_indices = df.index[df[index_col] == 1]
