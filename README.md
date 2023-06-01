@@ -45,6 +45,13 @@ The I/Q array for each burst can be generated via:
 l0file.get_burst_data( burst )
 ```
 
+Importantly, this data can now be cached in an `.npy` file using:
+```
+l0file.save_burst_data( burst )
+```
+
+--------------------------------------------
+
 The individual decoding functions can still be used:
 
 Initialize a Level0Decoder object:
