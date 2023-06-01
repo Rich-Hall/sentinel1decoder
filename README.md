@@ -18,6 +18,35 @@ Import the package:
 import sentinel1decoder
 ```
 
+New - Level0File class wraps most of the below functionality, while also breaking the file into bursts of constant swath number/number of quads, to allow for easy handling.
+
+Initialize a Level0File object:
+```
+l0file = sentinel1decoder.Level0File( filename )
+```
+
+This class contains: a dataframe containing the packet metadata:
+```
+l0file.packet_metadata()
+```
+
+A dataframe containing the ephemeris:
+```
+l0file.ephemeris()
+```
+
+The metadata is indexed by burst as well as packet number. Metadata on individual bursts can be accessed via:
+```
+l0file.get_burst_metadata( burst )
+```
+
+The I/Q array for each burst can be generated via:
+```
+l0file.get_burst_data( burst )
+```
+
+The individual decoding functions can still be used:
+
 Initialize a Level0Decoder object:
 ```
 decoder = sentinel1decoder.Level0Decoder( filename )
