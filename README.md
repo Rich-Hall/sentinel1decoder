@@ -27,12 +27,12 @@ l0file = sentinel1decoder.Level0File( filename )
 
 This class contains: a dataframe containing the packet metadata:
 ```
-l0file.packet_metadata()
+l0file.packet_metadata
 ```
 
 A dataframe containing the ephemeris:
 ```
-l0file.ephemeris()
+l0file.ephemeris
 ```
 
 The metadata is indexed by burst as well as packet number. Metadata on individual bursts can be accessed via:
