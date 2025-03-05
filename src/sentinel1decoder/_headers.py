@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 30 18:34:01 2022.
-
-@author: richa
-"""
 import logging
 
-from . import constants as cnst
+from sentinel1decoder import constants as cnst
 
 
 def decode_primary_header(header_bytes: bytes) -> dict:

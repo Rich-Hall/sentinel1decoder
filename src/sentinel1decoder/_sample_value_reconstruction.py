@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 10:16:29 2022.
-
-@author: richa
-"""
 import logging
 
 import numpy as np
 
-from . import _lookup_tables as lookup
+from sentinel1decoder import _lookup_tables as lookup
 
 
 def reconstruct_channel_vals(data, block_brcs, block_thidxs, vals_to_process):

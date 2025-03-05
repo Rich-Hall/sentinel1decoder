@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 12 17:36:54 2022.
-
-@author: richa
-"""
 import struct
 import numpy as np
 import pandas as pd
 
-from . import constants as cnst
+from sentinel1decoder import constants as cnst
 
 def range_dec_to_sample_rate(rgdec_code: int) -> float:
     """

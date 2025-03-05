@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 10:37:42 2022.
-
-@author: richa
-"""
 import math
 import logging
 
-from ._sample_code import SampleCode
+from sentinel1decoder._sample_code import SampleCode
 
 _TREE_BRC_ZERO = (0, (1, (2, 3)))
 _TREE_BRC_ONE = (0, (1, (2, (3, 4))))

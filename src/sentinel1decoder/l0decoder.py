@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 29 22:02:54 2022.
-
-@author: richa
-"""
 import logging
 import numpy as np
 import pandas as pd
 
-from . import _headers as hdrs
-from ._user_data_decoder import user_data_decoder
-from . import constants as cnst
+from sentinel1decoder import _headers as hdrs
+from sentinel1decoder._user_data_decoder import user_data_decoder
+from sentinel1decoder import constants as cnst
 
 from typing import BinaryIO, Tuple
 

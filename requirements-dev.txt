@@ -1,0 +1,7 @@
+pytest
+pytest-cov
+pre-commit
+black
+flake8
+isort
+-r requirements.txt

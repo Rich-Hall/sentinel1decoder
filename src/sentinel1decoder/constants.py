@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 30 18:39:18 2022.
-
-@author: richa
-"""
 # Constant used to scale several data fields
 F_REF = 37.53472224 * 1e6
 

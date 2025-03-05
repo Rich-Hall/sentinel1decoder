@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 22:31:09 2022.
-
-@author: richa
-"""
-
 # Table for simple reconstruction method, pg 78
 b0 = [
     3.0,
