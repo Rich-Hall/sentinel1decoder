@@ -1,6 +1,7 @@
+import pytest
+
 from sentinel1decoder._headers import decode_primary_header
 
-import pytest
 
 def test_decode_primary_header():
     # Supply too few bytes

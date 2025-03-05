@@ -6,7 +6,10 @@ class SampleCode:
         self.mcode = mcode
 
     def __repr__(self):
-        return "SampleCode(%(sign)i, %(mcode)i)" % {"sign": self.sign, "mcode": self.mcode}
+        return "SampleCode(%(sign)i, %(mcode)i)" % {
+            "sign": self.sign,
+            "mcode": self.mcode,
+        }
 
     @property
     def get_sign(self):

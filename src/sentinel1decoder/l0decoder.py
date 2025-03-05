@@ -1,19 +1,20 @@
 import logging
+from typing import BinaryIO, Tuple
+
 import numpy as np
 import pandas as pd
 
 from sentinel1decoder import _headers as hdrs
-from sentinel1decoder._user_data_decoder import user_data_decoder
 from sentinel1decoder import constants as cnst
+from sentinel1decoder._user_data_decoder import user_data_decoder
 
-from typing import BinaryIO, Tuple
 
 class Level0Decoder:
     """Decoder for Sentinel-1 Level 0 files."""
 
     def __init__(self, filename: str, log_level: int = logging.WARNING):
         # TODO: Better logging functionality
-        logging.basicConfig(filename='output_log.log', level=log_level)
+        logging.basicConfig(filename="output_log.log", level=log_level)
         logging.debug("Initialized logger")
 
         self.filename = filename
@@ -30,13 +31,13 @@ class Level0Decoder:
         """
         output_row_list = []
 
-        with open(self.filename, 'rb') as f:
+        with open(self.filename, "rb") as f:
             # An input file typically consists of many packets.
             # We don't know how many ahead of time.
             while True:
                 try:
                     output_dictionary_row, _ = self._read_single_packet(f)
-                except NoMorePacketsException as e:
+                except NoMorePacketsException:
                     break
                 output_row_list.append(output_dictionary_row)
 
@@ -67,11 +68,19 @@ class Level0Decoder:
         swath_numbers = input_header[cnst.SWATH_NUM_FIELD_NAME].unique()
         num_quads = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()
         if not len(swath_numbers) == 1:
-            logging.error(f"Supplied mismatched header info - too many swath numbers {swath_numbers}")
-            raise Exception(f"Received {len(swath_numbers)} swath numbers {swath_numbers}, expected 1.")
+            logging.error(
+                f"Supplied mismatched header info - too many swath numbers {swath_numbers}"
+            )
+            raise Exception(
+                f"Received {len(swath_numbers)} swath numbers {swath_numbers}, expected 1."
+            )
         if not len(num_quads) == 1:
-            logging.error(f"Supplied mismatched header info - too many number of quads {num_quads}")
-            raise Exception(f"Received {len(num_quads)} different number of quads {num_quads}, expected 1.")
+            logging.error(
+                f"Supplied mismatched header info - too many number of quads {num_quads}"
+            )
+            raise Exception(
+                f"Received {len(num_quads)} different number of quads {num_quads}, expected 1."
+            )
 
         packet_counter = 0
         packets_to_process = len(input_header)
@@ -79,17 +88,20 @@ class Level0Decoder:
 
         output_data = np.zeros([packets_to_process, nq * 2], dtype=(complex))
 
-        with open(self.filename, 'rb') as f:
+        with open(self.filename, "rb") as f:
             # Each iteration of the below loop will process one space packet.
             # An input file typically consists of many packets.
             while packet_counter < packets_to_process:
                 try:
                     this_header, packet_data_bytes = self._read_single_packet(f)
-                except NoMorePacketsException as e:
+                except NoMorePacketsException:
                     break
 
                 # Comparing space packet count is faster than comparing entire row
-                if this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME] in input_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME].values:
+                if (
+                    this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]
+                    in input_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME].values
+                ):
                     logging.debug(f"Decoding data from packet: {this_header}")
                     try:
                         baqmod = this_header[cnst.BAQ_MODE_FIELD_NAME]
@@ -98,9 +110,13 @@ class Level0Decoder:
                         this_data_packet = data_decoder.decode()
                         output_data[packet_counter, :] = this_data_packet
                     except Exception as e:
-                        logging.error(f"Failed to process packet {packet_counter} with Space Packet Count {this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]}\n{e}")
+                        logging.error(
+                            (
+                                f"Failed to process packet {packet_counter} "
+                                f"with Space Packet Count {this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]}\n{e}"
+                            )
+                        )
                         output_data[packet_counter, :] = 0
-                                      
 
                     logging.debug("Finished decoding packet data")
 
@@ -133,7 +149,9 @@ class Level0Decoder:
         pkt_data_len = output_dictionary_row[cnst.PACKET_DATA_LEN_FIELD_NAME]
         packet_data_buffer = opened_file.read(pkt_data_len)
         if not packet_data_buffer:
-            raise Exception(f"Unexpectedly hit EOF while trying to read packet data field.")
+            raise Exception(
+                "Unexpectedly hit EOF while trying to read packet data field."
+            )
 
         secondary_hdr = hdrs.decode_secondary_header(packet_data_buffer[:62])
         output_dictionary_row.update(secondary_hdr)
@@ -147,4 +165,3 @@ class Level0Decoder:
 
 class NoMorePacketsException(Exception):
     """Exception raised when we run out of packets to read in a file"""
-    pass

@@ -1,30 +1,31 @@
+import os
+
 import numpy as np
 import pandas as pd
 
+from sentinel1decoder import constants as c
 from sentinel1decoder.l0decoder import Level0Decoder
 from sentinel1decoder.utilities import read_subcommed_data
-from sentinel1decoder import constants as c
 
-import os
-from typing import List
 
 class Level0File:
     "A Sentinel-1 Level 0 file contains several 'bursts', or azimuth blocks"
 
-    def __init__(self, filename: str) -> None: 
+    def __init__(self, filename: str) -> None:
         self._filename = filename
         self._decoder = Level0Decoder(filename)
-        
+
         # Split metadata into blocks of consecutive packets w/ const swath number
-        self._packet_metadata = self._index_df_on_bursts(self._decoder.decode_metadata())
+        self._packet_metadata = self._index_df_on_bursts(
+            self._decoder.decode_metadata()
+        )
 
         # Only calculate ephemeris if requested
         self._ephemeris = None
 
         # Only decode radar echoes from bursts if that data is requested
         self._burst_data_dict = dict.fromkeys(
-            self._packet_metadata.index.unique(level=c.BURST_NUM_FIELD_NAME),
-            None
+            self._packet_metadata.index.unique(level=c.BURST_NUM_FIELD_NAME), None
         )
 
     @property
@@ -51,7 +52,7 @@ class Level0File:
             self._ephemeris = read_subcommed_data(self.packet_metadata)
         return self._ephemeris
 
-    def get_burst_metadata(self, burst:int) -> pd.DataFrame:
+    def get_burst_metadata(self, burst: int) -> pd.DataFrame:
         """
         Get a dataframe of the metadata from all packets in a given burst.
         A burst is a set of consecutive space packets with constant number of samples.
@@ -79,9 +80,11 @@ class Level0File:
                 try:
                     self._burst_data_dict[burst] = np.load(save_file_name)
                 finally:
-                    return self.get_burst_data(burst, try_load_from_file = False)
+                    return self.get_burst_data(burst, try_load_from_file=False)
             else:
-                self._burst_data_dict[burst] = self._decoder.decode_packets(self.get_burst_metadata(burst))
+                self._burst_data_dict[burst] = self._decoder.decode_packets(
+                    self.get_burst_metadata(burst)
+                )
 
         return self._burst_data_dict[burst]
 
@@ -89,12 +92,11 @@ class Level0File:
         save_file_name = self._generate_burst_cache_filename(burst)
         np.save(save_file_name, self.get_burst_data(burst))
 
-
     # ------------------------------------------------------------------------
     # ----------------------- Private class functions ------------------------
     # ------------------------------------------------------------------------
     def _generate_burst_cache_filename(self, burst: int) -> str:
-        return os.path.splitext(self.filename)[0] + "_b" + str(burst) +".npy"
+        return os.path.splitext(self.filename)[0] + "_b" + str(burst) + ".npy"
 
     def _index_df_on_bursts(self, packet_metadata: pd.DataFrame) -> pd.DataFrame:
         """
@@ -105,14 +107,15 @@ class Level0File:
             packet_metadata: pandas dataframe of packet metadata
 
         Returns:
-            The same dataframe with added burst number index 
+            The same dataframe with added burst number index
         """
         packet_metadata = packet_metadata.groupby(
             packet_metadata[[c.SWATH_NUM_FIELD_NAME, c.NUM_QUADS_FIELD_NAME]]
             .diff()
             .ne(0)
             .any(axis=1)
-            .cumsum(), group_keys=True
+            .cumsum(),
+            group_keys=True,
         ).apply(lambda x: x)
 
         packet_metadata.index.names = [
@@ -122,7 +125,9 @@ class Level0File:
 
         for name, group in packet_metadata.groupby(level=c.BURST_NUM_FIELD_NAME):
             if not _check_series_is_constant(group[c.NUM_QUADS_FIELD_NAME]):
-                raise Exception(f"Found too many number of quads in azimuth block {name}")
+                raise Exception(
+                    f"Found too many number of quads in azimuth block {name}"
+                )
 
         return packet_metadata
 

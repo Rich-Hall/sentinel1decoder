@@ -1,5 +1,5 @@
-import math
 import logging
+import math
 
 from sentinel1decoder._sample_code import SampleCode
 
@@ -7,7 +7,11 @@ _TREE_BRC_ZERO = (0, (1, (2, 3)))
 _TREE_BRC_ONE = (0, (1, (2, (3, 4))))
 _TREE_BRC_TWO = (0, (1, (2, (3, (4, (5, 6))))))
 _TREE_BRC_THREE = ((0, 1), (2, (3, (4, (5, (6, (7, (8, 9))))))))
-_TREE_BRC_FOUR = ((0, (1, 2)), ((3, 4), ((5, 6), (7, (8, (9, ((10, 11), ((12, 13), (14, 15)))))))))
+_TREE_BRC_FOUR = (
+    (0, (1, 2)),
+    ((3, 4), ((5, 6), (7, (8, (9, ((10, 11), ((12, 13), (14, 15)))))))),
+)
+
 
 class FDBAQDecoder:
     """Extracts sample codes from Sentinel-1 packets."""
@@ -19,7 +23,7 @@ class FDBAQDecoder:
         self._data = data
         self._num_quads = num_quads
 
-        self._num_baq_blocks = math.ceil(num_quads/128)
+        self._num_baq_blocks = math.ceil(num_quads / 128)
         self._brc = []
         self._thidx = []
 
@@ -27,14 +31,26 @@ class FDBAQDecoder:
         self._i_odds_scodes = []
         self._q_evens_scodes = []
         self._q_odds_scodes = []
-        
-        logging.debug(f"Created FDBAQ decoder. Numquads={num_quads} NumBAQblocks={self._num_baq_blocks}")
+
+        logging.debug(
+            (
+                f"Created FDBAQ decoder. "
+                f"Numquads={num_quads} "
+                f"NumBAQblocks={self._num_baq_blocks}"
+            )
+        )
 
         # TODO: Lots of repetition here, break into function(s)
         # Channel 1 - IE
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug(f"Starting IE block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
+            logging.debug(
+                (
+                    f"Starting IE block {block_index+1} of "
+                    f"{self._num_baq_blocks}, processing "
+                    f"{min(128, self._num_quads-values_processed_count)} vals"
+                )
+            )
 
             # Each Bit Rate Code is in the first three bits of each IE block
             brc = self._read_brc()
@@ -56,7 +72,7 @@ class FDBAQDecoder:
                 logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
-            for i in range(min(128, self._num_quads-values_processed_count)):
+            for i in range(min(128, self._num_quads - values_processed_count)):
                 sign = self._next_bit()
 
                 # Recursively step through our Huffman tree.
@@ -68,20 +84,34 @@ class FDBAQDecoder:
                     if current_node is None:
                         raise ValueError
                 self._i_evens_scodes.append(SampleCode(sign, current_node))
-                values_processed_count = values_processed_count+1
+                values_processed_count = values_processed_count + 1
 
         # Channel 2 - IO
         # Move counters to next 16-bit word boundary
-        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        logging.debug(
+            (
+                f"Finished block: "
+                f"bit_counter={self._bit_counter} "
+                f"byte_counter={self._byte_counter}"
+            )
+        )
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
-        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
-        
+        logging.debug(
+            f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
+        )
+
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug(f"Starting IO block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
+            logging.debug(
+                (
+                    f"Starting IO block {block_index+1} of "
+                    f"{self._num_baq_blocks}, processing "
+                    f"{min(128, self._num_quads-values_processed_count)} vals"
+                )
+            )
 
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
@@ -99,7 +129,7 @@ class FDBAQDecoder:
                 logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
-            for i in range(min(128, self._num_quads-values_processed_count)):
+            for i in range(min(128, self._num_quads - values_processed_count)):
                 sign = self._next_bit()
 
                 # Recursively step through our Huffman tree.
@@ -111,20 +141,30 @@ class FDBAQDecoder:
                     if current_node is None:
                         raise ValueError
                 self._i_odds_scodes.append(SampleCode(sign, current_node))
-                values_processed_count = values_processed_count+1
+                values_processed_count = values_processed_count + 1
 
         # Channel 3 -QE
         # Move counters to next 16-bit word boundary
-        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        logging.debug(
+            f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
+        )
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
-        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
-        
+        logging.debug(
+            f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
+        )
+
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug(f"Starting QE block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
+            logging.debug(
+                (
+                    f"Starting QE block {block_index+1} of "
+                    f"{self._num_baq_blocks}, processing "
+                    f"{min(128, self._num_quads-values_processed_count)} vals"
+                )
+            )
 
             # Each THIDX Code is in the first eight bits of each IE block
             this_thidx = self._read_thidx()
@@ -146,7 +186,7 @@ class FDBAQDecoder:
                 logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
-            for i in range(min(128, self._num_quads-values_processed_count)):
+            for i in range(min(128, self._num_quads - values_processed_count)):
                 sign = self._next_bit()
 
                 # Recursively step through our Huffman tree.
@@ -158,20 +198,30 @@ class FDBAQDecoder:
                     if current_node is None:
                         raise ValueError
                 self._q_evens_scodes.append(SampleCode(sign, current_node))
-                values_processed_count = values_processed_count+1
+                values_processed_count = values_processed_count + 1
 
         # Channel 4 - QO
         # Move counters to next 16-bit word boundary
-        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
+        logging.debug(
+            f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
+        )
         if not self._bit_counter == 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
-        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
-        
+        logging.debug(
+            f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
+        )
+
         values_processed_count = 0
         for block_index in range(self._num_baq_blocks):
-            logging.debug(f"Starting QO block {block_index+1} of {self._num_baq_blocks}, processing {min(128, self._num_quads-values_processed_count)} vals")
+            logging.debug(
+                (
+                    f"Starting QO block {block_index+1} of "
+                    f"{self._num_baq_blocks}, processing "
+                    f"{min(128, self._num_quads-values_processed_count)} vals"
+                )
+            )
 
             # The BRC determines which type of Huffman encoding we're using
             # Ref. SAR Space Protocol Data Unit p.71
@@ -189,7 +239,7 @@ class FDBAQDecoder:
                 logging.error(f"Unrecognized BAQ mode code {self._brc[block_index]}")
 
             # Each baq block contains 128 hcodes, except the last
-            for i in range(min(128, self._num_quads-values_processed_count)):
+            for i in range(min(128, self._num_quads - values_processed_count)):
                 sign = self._next_bit()
 
                 # Recursively step through our Huffman tree.
@@ -201,7 +251,7 @@ class FDBAQDecoder:
                     if current_node is None:
                         raise ValueError
                 self._q_odds_scodes.append(SampleCode(sign, current_node))
-                values_processed_count = values_processed_count+1
+                values_processed_count = values_processed_count + 1
 
     @property
     def get_brcs(self):
@@ -234,7 +284,7 @@ class FDBAQDecoder:
         return self._q_odds_scodes
 
     def _next_bit(self):
-        bit = (self._data[self._byte_counter] >> (7-self._bit_counter)) & 0x01
+        bit = (self._data[self._byte_counter] >> (7 - self._bit_counter)) & 0x01
         self._bit_counter = (self._bit_counter + 1) % 8
         if self._bit_counter == 0:
             self._byte_counter += 1
