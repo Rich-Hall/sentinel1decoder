@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 23:22:57 2022.
-
-@author: richa
-"""
-
-
 class SampleCode:
     """Sample code conistsing of sign bit and magnitude code."""
 
