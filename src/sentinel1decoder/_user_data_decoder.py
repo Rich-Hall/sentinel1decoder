@@ -90,7 +90,9 @@ class user_data_decoder:
             )
 
         else:
-            logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
+            logging.error(
+                f"Attempted to decode using invalid BAQ mode: {self.baq_mode}"
+            )
 
         # Re-order the even-indexed and odd-indexed sample channels here.
         decoded_data = []

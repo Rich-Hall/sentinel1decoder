@@ -3,5 +3,6 @@ pytest-cov
 pre-commit
 black
 flake8
+autoflake
 isort
 -r requirements.txt
