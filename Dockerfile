@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set the working directory
 WORKDIR /app
 
+# Copy package files - these should be overwritten by a volume mount
+COPY . .
+
 # Copy the requirements.txt file into the container and install the Python dependencies
-COPY requirements.txt  requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Create an entrypoint script that installs the package in dev mode
