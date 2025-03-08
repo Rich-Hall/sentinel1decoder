@@ -6,7 +6,7 @@ import pandas as pd
 
 from sentinel1decoder import _headers as hdrs
 from sentinel1decoder import constants as cnst
-from sentinel1decoder._user_data_decoder import user_data_decoder
+from sentinel1decoder._user_data_decoder import UserDataDecoder
 
 
 class Level0Decoder:
@@ -44,7 +44,7 @@ class Level0Decoder:
         output_dataframe = pd.DataFrame(output_row_list)
         return output_dataframe
 
-    def decode_packets(self, input_header: pd.DataFrame) -> np.array:
+    def decode_packets(self, input_header: pd.DataFrame) -> np.ndarray:
         """Decode the user data payload from the specified space packets.
 
         Packet data typically consists of a single radar echo. SAR images are
@@ -106,7 +106,7 @@ class Level0Decoder:
                     try:
                         baqmod = this_header[cnst.BAQ_MODE_FIELD_NAME]
                         nq = this_header[cnst.NUM_QUADS_FIELD_NAME]
-                        data_decoder = user_data_decoder(packet_data_bytes, baqmod, nq)
+                        data_decoder = UserDataDecoder(packet_data_bytes, baqmod, nq)
                         this_data_packet = data_decoder.decode()
                         output_data[packet_counter, :] = this_data_packet
                     except Exception as e:

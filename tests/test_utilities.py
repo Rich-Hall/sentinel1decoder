@@ -4,7 +4,7 @@ import sentinel1decoder.constants as cnst
 from sentinel1decoder.utilities import range_dec_to_sample_rate
 
 
-def test_range_dec_to_sample_rate():
+def test_range_dec_to_sample_rate() -> None:
     base_sample_freq = 4 * cnst.F_REF
     assert range_dec_to_sample_rate(0) == (3 / 4) * base_sample_freq
     assert range_dec_to_sample_rate(1) == (2 / 3) * base_sample_freq

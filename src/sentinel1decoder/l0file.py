@@ -1,4 +1,5 @@
 import os
+from typing import Dict, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -21,10 +22,10 @@ class Level0File:
         )
 
         # Only calculate ephemeris if requested
-        self._ephemeris = None
+        self._ephemeris: Optional[pd.DataFrame] = None
 
         # Only decode radar echoes from bursts if that data is requested
-        self._burst_data_dict = dict.fromkeys(
+        self._burst_data_dict: Dict[int, Optional[np.ndarray]] = dict.fromkeys(
             self._packet_metadata.index.unique(level=c.BURST_NUM_FIELD_NAME), None
         )
 
@@ -50,6 +51,7 @@ class Level0File:
         """
         if self._ephemeris is None:
             self._ephemeris = read_subcommed_data(self.packet_metadata)
+
         return self._ephemeris
 
     def get_burst_metadata(self, burst: int) -> pd.DataFrame:
@@ -61,9 +63,11 @@ class Level0File:
             burst:  The burst to retreive data for. Bursts are numbered
                     consecutively from the start of the file (1, 2, 3...)
         """
-        return self.packet_metadata.loc[burst]
 
-    def get_burst_data(self, burst: int, try_load_from_file: bool = True) -> np.array:
+        # packet_metadata is a multiindexed pd.DataFrame so using loc like this returns a pd.DataFrame too
+        return cast(pd.DataFrame, self.packet_metadata.loc[burst])
+
+    def get_burst_data(self, burst: int, try_load_from_file: bool = True) -> np.ndarray:
         """
         Get an array of complex samples from the SAR instrument for a given burst.
         A burst is a set of consecutive space packets with constant number of samples.
@@ -143,5 +147,4 @@ def _check_series_is_constant(series: pd.Series) -> bool:
     Returns:
         True if the series values are all the same, false otherwise
     """
-    series = series.to_numpy()
-    return (series[0] == series).all()
+    return cast(bool, series.nunique() == 1)

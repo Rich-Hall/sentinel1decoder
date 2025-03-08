@@ -21,7 +21,7 @@ def decode_primary_header(header_bytes: bytes) -> dict:
 
     """
     if not len(header_bytes) == 6:
-        logging.ERROR("Primary header must be exactly 6 bytes")
+        logging.error("Primary header must be exactly 6 bytes")
         raise Exception(
             f"Primary header must be exactly 6 bytes. Received {len(header_bytes)} bytes."
         )
@@ -72,7 +72,7 @@ def decode_secondary_header(header_bytes: bytes) -> dict:
         A dictionary of secondary header fields.
     """
     if not len(header_bytes) == 62:
-        logging.ERROR("Secondary header must be exactly 62 bytes")
+        logging.error("Secondary header must be exactly 62 bytes")
         raise Exception(
             f"Secondary header must be exactly 62 bytes. Received {len(header_bytes)} bytes."
         )

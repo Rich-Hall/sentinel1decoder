@@ -1,18 +1,15 @@
 import logging
+from typing import List
 
-from sentinel1decoder import _sample_value_reconstruction as rec
 from sentinel1decoder._fdbaq_decoder import FDBAQDecoder
-from sentinel1decoder._sample_code_bypass import decode_bypass_data
+from sentinel1decoder._sample_code_bypass import BypassDecoder
+from sentinel1decoder._sample_value_reconstruction import reconstruct_channel_vals
 
 
-class user_data_decoder:
+class UserDataDecoder:
     """Decoder for the user data portion of Sentinel-1 space packets."""
 
-    # Facade design pattern. This class is intended as an interface for the
-    # SCode extraction and reconstruction classes. It decodes and reconstructs
-    # the IE, IO, QE, QO values from a single space packet.
-
-    def __init__(self, data, baq_mode, num_quads):
+    def __init__(self, data: bytes, baq_mode: int, num_quads: int) -> None:
         if baq_mode not in (0, 3, 4, 5, 12, 13, 14):
             logging.error(f"Unrecognized BAQ mode: {baq_mode}")
             raise Exception(f"Unrecognized BAQ mode: {baq_mode}")
@@ -21,7 +18,7 @@ class user_data_decoder:
         self.baq_mode = baq_mode
         self.num_quads = num_quads
 
-    def decode(self):
+    def decode(self) -> List[complex]:
         """Decode the user data according to the specified encoding mode.
 
         Refer to SAR Space Protocol Data Unit specification document pg.56.
@@ -36,25 +33,19 @@ class user_data_decoder:
 
         Returns
         -------
-        IE : TYPE
-            DESCRIPTION.
-        IO : TYPE
-            DESCRIPTION.
-        QE : TYPE
-            DESCRIPTION.
-        QO : TYPE
-            DESCRIPTION.
-
+        Complex array of decoded samples.
         """
-        # TODO: Finish docstrings
 
         # The decoding method used depends on the BAQ mode used.
         # The BAQ mode used for this packet is specified in the packet header.
         if self.baq_mode == 0:
             # Bypass data is encoded as a simple list of 10-bit words.
             # No value reconstruction is required in this mode.
-
-            IE, IO, QE, QO = decode_bypass_data(self.data, self.num_quads)
+            bypass_decoder = BypassDecoder(self.data, self.num_quads)
+            IE = bypass_decoder.i_evens
+            IO = bypass_decoder.i_odds
+            QE = bypass_decoder.q_evens
+            QO = bypass_decoder.q_odds
 
         elif self.baq_mode in (3, 4, 5):
             # TODO - Implement Data format type C decoding.
@@ -67,8 +58,8 @@ class user_data_decoder:
             # Sample code extraction happens in FDBAQDedcoder __init__ function
             # The extracted channel SCodes are properties of FDBAQDedcoder
             scode_extractor = FDBAQDecoder(self.data, self.num_quads)
-            brcs = scode_extractor.get_brcs
-            thidxs = scode_extractor.get_thidxs
+            brcs = scode_extractor.brcs
+            thidxs = scode_extractor.thidxs
 
             logging.debug(f"Read BRCs: {brcs}")
             logging.debug(f"Read THIDXs: {thidxs}")
@@ -76,17 +67,17 @@ class user_data_decoder:
             # Huffman-decoded sample codes are grouped into blocks, and can be
             # reconstructed using various lookup tables which cross-reference
             # that Block's Bit-Rate Code (BRC) and Threshold Index (THIDX)
-            IE = rec.reconstruct_channel_vals(
-                scode_extractor.get_s_ie, brcs, thidxs, self.num_quads
+            IE = reconstruct_channel_vals(
+                scode_extractor.s_ie, brcs, thidxs, self.num_quads
             )
-            IO = rec.reconstruct_channel_vals(
-                scode_extractor.get_s_io, brcs, thidxs, self.num_quads
+            IO = reconstruct_channel_vals(
+                scode_extractor.s_io, brcs, thidxs, self.num_quads
             )
-            QE = rec.reconstruct_channel_vals(
-                scode_extractor.get_s_qe, brcs, thidxs, self.num_quads
+            QE = reconstruct_channel_vals(
+                scode_extractor.s_qe, brcs, thidxs, self.num_quads
             )
-            QO = rec.reconstruct_channel_vals(
-                scode_extractor.get_s_qo, brcs, thidxs, self.num_quads
+            QO = reconstruct_channel_vals(
+                scode_extractor.s_qo, brcs, thidxs, self.num_quads
             )
 
         else:

@@ -1,20 +1,20 @@
 class SampleCode:
     """Sample code conistsing of sign bit and magnitude code."""
 
-    def __init__(self, sign, mcode):
-        self.sign = sign
-        self.mcode = mcode
+    def __init__(self, sign: int, mcode: int) -> None:
+        self._sign = sign
+        self._mcode = mcode
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "SampleCode(%(sign)i, %(mcode)i)" % {
-            "sign": self.sign,
-            "mcode": self.mcode,
+            "sign": self._sign,
+            "mcode": self._mcode,
         }
 
     @property
-    def get_sign(self):
-        return self.sign
+    def sign(self) -> int:
+        return self._sign
 
     @property
-    def get_mcode(self):
-        return self.mcode
+    def mcode(self) -> int:
+        return self._mcode

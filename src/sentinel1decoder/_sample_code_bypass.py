@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import numpy as np
 
@@ -15,170 +14,91 @@ def _ten_bit_unsigned_to_signed_int(ten_bit: int) -> int:
         A standard signed integer
     """
     # First bit is the sign, remaining 9 encoide the number
-    sign = (-1) ** ((ten_bit >> 9) & 0x1)
+    sign = int((-1) ** ((ten_bit >> 9) & 0x1))
     return sign * (ten_bit & 0x1FF)
 
 
-def decode_bypass_data(
-    data: bytes, num_quads: int
-) -> Tuple[float, float, float, float]:
-    """Decode user data format type A and B (“Bypass” or “Decimation Only”).
+class BypassDecoder:
+    """Decode user data format type A and B (“Bypass” or “Decimation Only”)."""
 
-    Data is simply encoded in a series of 10-bit words.
+    def __init__(self, data: bytes, num_quads: int) -> None:
+        self._data = data
+        self._num_quads = num_quads
 
-    Parameters
-    ----------
-    data : TYPE
-        DESCRIPTION.
-    num_quads : int
-        Number of quads in the file.
+        _num_words = math.ceil((10 / 16) * num_quads)  # No. of 16-bit words per channel
+        self._num_bytes = 2 * _num_words  # No. of 8-bit bytes per channel
 
-    Returns
-    -------
-    i_evens : TYPE
-        DESCRIPTION.
-    i_odds : TYPE
-        DESCRIPTION.
-    q_evens : TYPE
-        DESCRIPTION.
-    q_odds : TYPE
-        DESCRIPTION.
+        self._i_evens = self._process_channel(0)
+        self._i_odds = self._process_channel(self._num_bytes)
+        self._q_evens = self._process_channel(2 * self._num_bytes)
+        self._q_odds = self._process_channel(3 * self._num_bytes)
 
-    """
-    num_words = math.ceil((10 / 16) * num_quads)  # No. of 16-bit words per channel
-    num_bytes = 2 * num_words  # No. of 8-bit bytes per channel
+    @property
+    def i_evens(self) -> np.ndarray:
+        return self._i_evens
 
-    i_evens = np.zeros(num_quads)
-    i_odds = np.zeros(num_quads)
-    q_evens = np.zeros(num_quads)
-    q_odds = np.zeros(num_quads)
+    @property
+    def i_odds(self) -> np.ndarray:
+        return self._i_odds
 
-    # Python doesn't have an easy way of extracting 10-bit integers.
-    # Five 8-bit bytes = 40 bits = four 10-bit words
+    @property
+    def q_evens(self) -> np.ndarray:
+        return self._q_evens
 
-    # We're going to read in sets of five normal 8-bit bytes, and extract four
-    # 10-bit words per set. We'll need to track the indexing separately and
-    # check for the end of the file each time.
-    # TODO: There is some repetition here which could be moved into function(s)
+    @property
+    def q_odds(self) -> np.ndarray:
+        return self._q_odds
 
-    # Channel 1 - IE
-    index_8bit = 0
-    index_10bit = 0
-    while index_10bit < num_quads:
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit] << 2 | data[index_8bit + 1] >> 6) & 1023
-            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 1] << 4 | data[index_8bit + 2] >> 4) & 1023
-            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 2] << 6 | data[index_8bit + 3] >> 2) & 1023
-            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 3] << 8 | data[index_8bit + 4] >> 0) & 1023
-            i_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        index_8bit += 5
+    def _process_channel(self, start_8bit_index: int) -> np.ndarray:
+        """Process a single channel's data.
 
-    # Channel 2 - IO
-    index_8bit = num_bytes
-    index_10bit = 0
-    while index_10bit < num_quads:
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit] << 2 | data[index_8bit + 1] >> 6) & 1023
-            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 1] << 4 | data[index_8bit + 2] >> 4) & 1023
-            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 2] << 6 | data[index_8bit + 3] >> 2) & 1023
-            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 3] << 8 | data[index_8bit + 4] >> 0) & 1023
-            i_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        index_8bit += 5
+        Python doesn't have an easy way of extracting 10-bit integers.
+        We're going to read in sets of five normal 8-bit bytes, and extract four
+        10-bit words per set. We'll need to track the indexing separately and
+        check for the end of the file each time.
 
-    # Channel 3 - QE
-    index_8bit = 2 * num_bytes
-    index_10bit = 0
-    while index_10bit < num_quads:
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit] << 2 | data[index_8bit + 1] >> 6) & 1023
-            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 1] << 4 | data[index_8bit + 2] >> 4) & 1023
-            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 2] << 6 | data[index_8bit + 3] >> 2) & 1023
-            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 3] << 8 | data[index_8bit + 4] >> 0) & 1023
-            q_evens[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        index_8bit += 5
+        Args:
+            channel_name: The name of the channel to process.
+            output_array: The array to store the processed data.
+            start_8bit_index: The starting index of the 8-bit bytes to process.
+        """
+        index_8bit = start_8bit_index
+        index_10bit = 0
+        output_array = np.zeros(self._num_quads, dtype=int)
 
-    # Channel 4 - QO
-    index_8bit = 3 * num_bytes
-    index_10bit = 0
-    while index_10bit < num_quads:
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit] << 2 | data[index_8bit + 1] >> 6) & 1023
-            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 1] << 4 | data[index_8bit + 2] >> 4) & 1023
-            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 2] << 6 | data[index_8bit + 3] >> 2) & 1023
-            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        if index_10bit < num_quads:
-            s_code = (data[index_8bit + 3] << 8 | data[index_8bit + 4] >> 0) & 1023
-            q_odds[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
-            index_10bit += 1
-        else:
-            break
-        index_8bit += 5
+        while index_10bit < self._num_quads:
+            if index_10bit < self._num_quads:
+                s_code = (
+                    self._data[index_8bit] << 2 | self._data[index_8bit + 1] >> 6
+                ) & 1023
+                output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
+                index_10bit += 1
+            else:
+                break
+            if index_10bit < self._num_quads:
+                s_code = (
+                    self._data[index_8bit + 1] << 4 | self._data[index_8bit + 2] >> 4
+                ) & 1023
+                output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
+                index_10bit += 1
+            else:
+                break
+            if index_10bit < self._num_quads:
+                s_code = (
+                    self._data[index_8bit + 2] << 6 | self._data[index_8bit + 3] >> 2
+                ) & 1023
+                output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
+                index_10bit += 1
+            else:
+                break
+            if index_10bit < self._num_quads:
+                s_code = (
+                    self._data[index_8bit + 3] << 8 | self._data[index_8bit + 4] >> 0
+                ) & 1023
+                output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
+                index_10bit += 1
+            else:
+                break
+            index_8bit += 5
 
-    return i_evens, i_odds, q_evens, q_odds
+        return output_array
