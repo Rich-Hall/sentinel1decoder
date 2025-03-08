@@ -1,7 +1,7 @@
 from sentinel1decoder._sample_code_bypass import _ten_bit_unsigned_to_signed_int
 
 
-def test_ten_bit_unsigned_to_signed_int():
+def test_ten_bit_unsigned_to_signed_int() -> None:
     # 0000000000
     assert _ten_bit_unsigned_to_signed_int(0x000) == 0
 
