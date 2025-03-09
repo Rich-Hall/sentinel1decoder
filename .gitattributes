@@ -1,0 +1,37 @@
+# Default: normalize line endings for all text files
+* text=auto eol=lf
+
+# Python files
+*.py text diff=python
+*.pyi text diff=python
+
+# Documentation
+*.md text diff=markdown
+*.rst text
+*.txt text
+
+# Data files
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.cfg text
+
+# Binary files (no line ending conversion)
+*.dat binary
+*.npy binary
+*.npz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Scripts should use LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows scripts should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
