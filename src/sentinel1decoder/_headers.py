@@ -35,7 +35,7 @@ def decode_primary_header(header_bytes: bytes) -> dict:
 
     tmp16 = int.from_bytes(header_bytes[2:4], "big")
     sequence_flags = tmp16 >> 14  # Bit 0-1
-    packet_sequence_count = tmp16 & 0x3F  # Bit 2-15
+    packet_sequence_count = tmp16 & 0x3FFF  # Bit 2-15
 
     tmp16 = int.from_bytes(header_bytes[4:], "big")
     packet_data_length = tmp16 + 1  # Bit 0-15
