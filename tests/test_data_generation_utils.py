@@ -83,6 +83,13 @@ def test_pack_10bit_samples() -> None:
     )
     assert result == expected
 
+    samples = [-511, 511, -188, 341]
+    result = pack_10bit_samples(samples)
+    expected = pack_bits(
+        ["1111111111", "0111111111", "1010111100", "0101010101", "00000000"]
+    )
+    assert result == expected
+
 
 def test_create_primary_header(default_packet_config: PacketConfig) -> None:
     data_length = 1

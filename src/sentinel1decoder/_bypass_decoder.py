@@ -13,7 +13,7 @@ def _ten_bit_unsigned_to_signed_int(ten_bit: int) -> int:
     Returns:
         A standard signed integer
     """
-    # First bit is the sign, remaining 9 encoide the number
+    # First bit is the sign, remaining 9 encode the number
     sign = int((-1) ** ((ten_bit >> 9) & 0x1))
     return sign * (ten_bit & 0x1FF)
 
@@ -75,6 +75,7 @@ class BypassDecoder:
                 index_10bit += 1
             else:
                 break
+
             if index_10bit < self._num_quads:
                 s_code = (
                     self._data[index_8bit + 1] << 4 | self._data[index_8bit + 2] >> 4
@@ -83,6 +84,7 @@ class BypassDecoder:
                 index_10bit += 1
             else:
                 break
+
             if index_10bit < self._num_quads:
                 s_code = (
                     self._data[index_8bit + 2] << 6 | self._data[index_8bit + 3] >> 2
@@ -91,6 +93,7 @@ class BypassDecoder:
                 index_10bit += 1
             else:
                 break
+
             if index_10bit < self._num_quads:
                 s_code = (
                     self._data[index_8bit + 3] << 8 | self._data[index_8bit + 4] >> 0
@@ -99,6 +102,7 @@ class BypassDecoder:
                 index_10bit += 1
             else:
                 break
+
             index_8bit += 5
 
         return output_array

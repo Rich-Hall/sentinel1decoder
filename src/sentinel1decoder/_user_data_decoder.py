@@ -1,8 +1,8 @@
 import logging
 from typing import List
 
+from sentinel1decoder._bypass_decoder import BypassDecoder
 from sentinel1decoder._fdbaq_decoder import FDBAQDecoder
-from sentinel1decoder._sample_code_bypass import BypassDecoder
 from sentinel1decoder._sample_value_reconstruction import reconstruct_channel_vals
 
 
