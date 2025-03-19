@@ -43,7 +43,7 @@ def test_decoding() -> None:
     assert np.array_equal(decoder.q_evens, np.arange(16, 24))
     assert np.array_equal(decoder.q_odds, np.arange(24, 32))
 
-    # 3 channels, 3 quads each. 30 bits total, so 2 bits padding
+    # 4 channels, 3 quads each. 30 bits total per channel, so 2 bits padding
     ie = [200, 201, 202]
     io = [300, 301, 302]
     qe = [400, 401, 402]
@@ -60,7 +60,7 @@ def test_decoding() -> None:
     assert np.array_equal(decoder.q_evens, qe)
     assert np.array_equal(decoder.q_odds, qo)
 
-    # 3 channels, 3 quads each. 30 bits total, so 2 bits padding
+    # 4 channels, 4 quads each. 40 bits total per channel, so 8 bits padding
     ie = [-200, -201, -202, -203]
     io = [-300, -301, -302, -303]
     qe = [-400, -401, -402, -403]
