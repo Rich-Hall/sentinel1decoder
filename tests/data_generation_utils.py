@@ -70,6 +70,32 @@ class PacketConfig:
     const_thidx: int = 0
 
 
+def signed_int_to_ten_bit_unsigned(value: int) -> int:
+    """
+    Convert a standard signed int to a ten-bit unsigned int.
+
+    The output format uses the first bit as sign (1 for negative)
+    and the remaining 9 bits as magnitude.
+
+    Args:
+        value: Standard signed integer to convert.
+
+    Returns:
+        A ten-bit unsigned integer with sign-magnitude encoding
+    """
+    # Ensure value is within valid range for 9-bit magnitude
+    if not -511 <= value <= 511:
+        raise ValueError("Value must be between -511 and 511")
+
+    # Get magnitude (absolute value) and mask to 9 bits
+    magnitude = abs(value) & 0x1FF
+
+    # Set sign bit (bit 9) if negative
+    if value < 0:
+        return magnitude | 0x200  # 0x200 is binary 1000000000
+    return magnitude
+
+
 def pack_bits(bit_strings: List[str]) -> bytes:
     """Pack a list of binary strings into bytes."""
     all_bits = "".join(bit_strings)
@@ -93,7 +119,7 @@ def pack_10bit_samples(samples: List[int]) -> bytes:
 
     for sample in samples:
         # Ensure value is within 10-bit range
-        sample = max(-512, min(511, sample)) & 0x3FF
+        sample = signed_int_to_ten_bit_unsigned(sample)
 
         # Add this 10-bit sample to current_word
         current_word = (current_word << 10) | sample
