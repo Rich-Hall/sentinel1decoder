@@ -11,6 +11,11 @@ class SampleCode:
             "mcode": self._mcode,
         }
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SampleCode):
+            return False
+        return self._sign == other._sign and self._mcode == other._mcode
+
     @property
     def sign(self) -> int:
         return self._sign
