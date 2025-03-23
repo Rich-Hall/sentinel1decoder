@@ -96,10 +96,13 @@ def signed_int_to_ten_bit_unsigned(value: int) -> int:
     return magnitude
 
 
-def pack_bits(bit_strings: List[str]) -> bytes:
+def pack_bits(bit_strings: List[str], pack_to_16_bits: bool = False) -> bytes:
     """Pack a list of binary strings into bytes."""
     all_bits = "".join(bit_strings)
-    padding = (8 - len(all_bits) % 8) % 8
+    if pack_to_16_bits:
+        padding = (16 - len(all_bits) % 16) % 16
+    else:
+        padding = (8 - len(all_bits) % 8) % 8
     all_bits = all_bits + "0" * padding
     num_bytes = len(all_bits) // 8
     result = bytearray(num_bytes)
