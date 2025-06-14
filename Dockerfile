@@ -12,19 +12,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libatlas-base-dev \
     git \
     nano \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
 
+# Create and activate a virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Copy package files - these should be overwritten by a volume mount
 COPY . .
+
+# Install Rust
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Copy the requirements.txt file into the container and install the Python dependencies
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Create an entrypoint script that installs the package in dev mode
-RUN echo '#!/bin/bash\ncd /app && pip install -e . && exec "$@"' > /entrypoint.sh \
+RUN echo '#!/bin/bash\nsource /opt/venv/bin/activate\ncd /app && maturin develop --manifest-path rust/Cargo.toml && exec "$@"' > /entrypoint.sh \
     && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
