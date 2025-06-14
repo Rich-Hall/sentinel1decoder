@@ -32,6 +32,11 @@ jobs:
     - name: Test clean install
       run: |
         python -m pip install --upgrade pip
+        # Install Rust
+        curl https://sh.rustup.rs -sSf | sh -s -- -y
+        source $HOME/.cargo/env
+        # Install maturin
+        pip install maturin
         # Install in a new directory to ensure clean install
         mkdir test_install
         cd test_install
