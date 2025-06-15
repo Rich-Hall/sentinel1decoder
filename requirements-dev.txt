@@ -1,3 +1,6 @@
+# Build system
+maturin>=1.4.0
+
 # Testing
 pytest
 pytest-cov
@@ -16,9 +19,6 @@ ipywidgets
 # Related packages useful in jupyter notebooks
 scipy
 matplotlib
-
-# Requirements
--r requirements.txt
 
 # Type checking
 pandas-stubs
