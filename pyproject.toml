@@ -44,8 +44,6 @@ dev = [
     "matplotlib",
     # Type checking
     "pandas-stubs",
-    "numpy-stubs",
-    "pytest-stubs"
 ]
 
 [tool.maturin]
