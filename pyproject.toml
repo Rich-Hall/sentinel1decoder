@@ -5,11 +5,45 @@ build-backend = "maturin"
 [project]
 name = "sentinel1decoder"
 version = "0.1.0"
-description = "Sentinel-1 Level-0 decoder"
+description = "A python decoder for ESA Sentinel-1 Level0 files"
+readme = "README.md"
+license = {text = "GPL-3.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
 requires-python = ">=3.8"
 dependencies = [
     "numpy",
     "pandas",
+]
+
+[project.urls]
+Homepage = "https://github.com/Rich-Hall/sentinel1decoder"
+
+[project.optional-dependencies]
+dev = [
+    # Build system
+    "maturin>=1.4.0",
+    # Testing
+    "pytest",
+    "pytest-cov",
+    "pre-commit",
+    "black",
+    "flake8",
+    "autoflake",
+    "isort",
+    "mypy",
+    # Jupyter
+    "jupyter",
+    "jupyterlab",
+    "ipywidgets",
+    # Related packages useful in jupyter notebooks
+    "scipy",
+    "matplotlib",
+    # Type checking
+    "pandas-stubs",
 ]
 
 [tool.maturin]
@@ -18,3 +52,25 @@ module-name = "sentinel1decoder"
 manifest-path = "rust/Cargo.toml"
 manylinux = "2_34"
 interpreter = ["python3.8", "python3.9", "python3.10", "python3.11"]
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203"]
