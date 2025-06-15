@@ -20,8 +20,5 @@ ipywidgets
 scipy
 matplotlib
 
-# Requirements
--r requirements.txt
-
 # Type checking
 pandas-stubs

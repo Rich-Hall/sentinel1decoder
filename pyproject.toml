@@ -2,6 +2,16 @@
 requires = ["maturin>=1.4.0"]
 build-backend = "maturin"
 
+[project]
+name = "sentinel1decoder"
+version = "0.1.0"
+description = "Sentinel-1 Level-0 decoder"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "pandas",
+]
+
 [tool.maturin]
 python-source = "src"
 module-name = "sentinel1decoder"
