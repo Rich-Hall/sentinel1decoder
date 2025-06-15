@@ -35,12 +35,13 @@ jobs:
       run: pip install maturin
 
     - name: Build Wheel
-      run: |
-        maturin build --release --manifest-path path/to/Cargo.toml
-      # Save built artifacts
+      run: maturin build --release
+
+    - name: Upload built wheels
+      uses: actions/upload-artifact@v4
       with:
-        path: ./target/wheels
-      continue-on-error: false
+        name: wheels
+        path: target/wheels/*.whl
 
   install-tests:
     needs: build-package
@@ -51,6 +52,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Download built wheels
+      uses: actions/download-artifact@v4
+      with:
+        name: wheels
+        path: target/wheels
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -59,8 +66,7 @@ jobs:
     - name: Test installability
       run: |
         python -m pip install --upgrade pip
-        # Install package from built wheel
-        pip install ../target/wheels/*.whl
+        pip install target/wheels/*.whl
 
     - name: Test imports
       run: |
