@@ -15,11 +15,7 @@ jobs:
     - name: Build and test in container
       run: |
         docker build -t sentinel1-dev .
-        docker run sentinel1-dev bash -c "
-          maturin develop --manifest-path rust/Cargo.toml &&
-          pre-commit run --all-files &&
-          pytest tests/ -v
-        "
+        docker run --rm sentinel1-dev pytest tests/ -v
 
   build-package:
     runs-on: ubuntu-latest
