@@ -27,11 +27,13 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Copy project files
 COPY . .
 
+# Install Python dependencies
+RUN pip install --no-cache-dir -e ".[dev]"
 
 # Create an entrypoint script that installs the package in dev mode
 RUN echo '#!/bin/bash' > /entrypoint.sh && \
     echo 'source /opt/venv/bin/activate' >> /entrypoint.sh && \
-    echo 'cd /app && maturin develop --extras dev && exec "$@"' >> /entrypoint.sh && \
+    echo 'cd /app && maturin develop && exec "$@"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
