@@ -33,7 +33,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Create an entrypoint script that installs the package in dev mode
-RUN echo '#!/bin/bash\nsource /opt/venv/bin/activate\ncd /app && maturin develop --manifest-path rust/Cargo.toml && exec "$@"' > /entrypoint.sh \
+RUN echo '#!/bin/bash\nsource /opt/venv/bin/activate\ncd /app && maturin develop && exec "$@"' > /entrypoint.sh \
     && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
