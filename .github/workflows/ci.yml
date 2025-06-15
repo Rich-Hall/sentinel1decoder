@@ -19,13 +19,16 @@ jobs:
 
   build-package:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: ${{ matrix.python-version }}
 
     - name: Install Rust
       run: |
@@ -40,12 +43,12 @@ jobs:
         mkdir -p target/wheels
         maturin build --release --out target/wheels
         echo "Built wheels:"
-        ls -l target/wheels/
+        ls -la target/wheels/
 
     - name: Upload Built Wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels
+        name: wheels-${{ matrix.python-version }}
         path: target/wheels/*.whl
 
   install-tests:
@@ -60,7 +63,7 @@ jobs:
     - name: Download Built Wheels
       uses: actions/download-artifact@v4
       with:
-        name: wheels
+        name: wheels-${{ matrix.python-version }}
         path: target/wheels
 
     - name: List Downloaded Wheels
