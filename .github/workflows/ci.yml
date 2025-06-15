@@ -35,7 +35,7 @@ jobs:
       run: pip install maturin
 
     - name: Build Wheel
-      run: maturin build --release
+      run: maturin build --release --manifest-path rust/Cargo.toml
 
     - name: Upload built wheels
       uses: actions/upload-artifact@v4
