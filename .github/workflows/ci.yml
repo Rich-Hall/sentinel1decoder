@@ -22,10 +22,7 @@ jobs:
         "
 
   build-package:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -45,24 +42,19 @@ jobs:
     - name: Build Wheel
       run: |
         mkdir -p target/wheels
-        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          maturin build --release --manifest-path rust/Cargo.toml --out target/wheels --interpreter python3.8 python3.9 python3.10 python3.11 --manylinux 2_34
-        else
-          maturin build --release --manifest-path rust/Cargo.toml --out target/wheels --interpreter python3.8 python3.9 python3.10 python3.11
-        fi
+        maturin build --release --manifest-path rust/Cargo.toml --out target/wheels --interpreter python3.8 python3.9 python3.10 python3.11 --manylinux 2_34
 
     - name: Upload built wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.os }}
+        name: wheels
         path: target/wheels/*.whl
 
   install-tests:
     needs: build-package
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v4
@@ -70,7 +62,7 @@ jobs:
     - name: Download built wheels
       uses: actions/download-artifact@v4
       with:
-        name: wheels-${{ matrix.os }}
+        name: wheels
         path: target/wheels
 
     - name: Set up Python ${{ matrix.python-version }}
