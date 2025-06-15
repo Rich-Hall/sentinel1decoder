@@ -67,23 +67,13 @@ class UserDataDecoder:
             # Huffman-decoded sample codes are grouped into blocks, and can be
             # reconstructed using various lookup tables which cross-reference
             # that Block's Bit-Rate Code (BRC) and Threshold Index (THIDX)
-            IE = reconstruct_channel_vals(
-                scode_extractor.s_ie, brcs, thidxs, self.num_quads
-            )
-            IO = reconstruct_channel_vals(
-                scode_extractor.s_io, brcs, thidxs, self.num_quads
-            )
-            QE = reconstruct_channel_vals(
-                scode_extractor.s_qe, brcs, thidxs, self.num_quads
-            )
-            QO = reconstruct_channel_vals(
-                scode_extractor.s_qo, brcs, thidxs, self.num_quads
-            )
+            IE = reconstruct_channel_vals(scode_extractor.s_ie, brcs, thidxs, self.num_quads)
+            IO = reconstruct_channel_vals(scode_extractor.s_io, brcs, thidxs, self.num_quads)
+            QE = reconstruct_channel_vals(scode_extractor.s_qe, brcs, thidxs, self.num_quads)
+            QO = reconstruct_channel_vals(scode_extractor.s_qo, brcs, thidxs, self.num_quads)
 
         else:
-            logging.error(
-                f"Attempted to decode using invalid BAQ mode: {self.baq_mode}"
-            )
+            logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
 
         # Re-order the even-indexed and odd-indexed sample channels here.
         decoded_data = []

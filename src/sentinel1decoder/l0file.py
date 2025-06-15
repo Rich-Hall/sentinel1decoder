@@ -17,9 +17,7 @@ class Level0File:
         self._decoder = Level0Decoder(filename)
 
         # Split metadata into blocks of consecutive packets w/ const swath number
-        self._packet_metadata = self._index_df_on_bursts(
-            self._decoder.decode_metadata()
-        )
+        self._packet_metadata = self._index_df_on_bursts(self._decoder.decode_metadata())
 
         # Only calculate ephemeris if requested
         self._ephemeris: Optional[pd.DataFrame] = None
@@ -86,11 +84,9 @@ class Level0File:
                 finally:
                     return self.get_burst_data(burst, try_load_from_file=False)
             else:
-                self._burst_data_dict[burst] = self._decoder.decode_packets(
-                    self.get_burst_metadata(burst)
-                )
+                self._burst_data_dict[burst] = self._decoder.decode_packets(self.get_burst_metadata(burst))
 
-        return self._burst_data_dict[burst]
+        return self._burst_data_dict[burst]  # type: ignore
 
     def save_burst_data(self, burst: int) -> None:
         save_file_name = self._generate_burst_cache_filename(burst)
@@ -114,11 +110,7 @@ class Level0File:
             The same dataframe with added burst number index
         """
         packet_metadata = packet_metadata.groupby(
-            packet_metadata[[c.SWATH_NUM_FIELD_NAME, c.NUM_QUADS_FIELD_NAME]]
-            .diff()
-            .ne(0)
-            .any(axis=1)
-            .cumsum(),
+            packet_metadata[[c.SWATH_NUM_FIELD_NAME, c.NUM_QUADS_FIELD_NAME]].diff().ne(0).any(axis=1).cumsum(),
             group_keys=True,
         ).apply(lambda x: x)
 
@@ -129,9 +121,7 @@ class Level0File:
 
         for name, group in packet_metadata.groupby(level=c.BURST_NUM_FIELD_NAME):
             if not _check_series_is_constant(group[c.NUM_QUADS_FIELD_NAME]):
-                raise Exception(
-                    f"Found too many number of quads in azimuth block {name}"
-                )
+                raise Exception(f"Found too many number of quads in azimuth block {name}")
 
         return packet_metadata
 
@@ -147,4 +137,4 @@ def _check_series_is_constant(series: pd.Series) -> bool:
     Returns:
         True if the series values are all the same, false otherwise
     """
-    return cast(bool, series.nunique() == 1)
+    return cast(bool, series.nunique() == 1)  # type: ignore

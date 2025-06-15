@@ -39,11 +39,7 @@ def reconstruct_channel_vals(
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (
-                        (-1) ** s_code.sign
-                        * lookup.nrl_b0[s_code.mcode]
-                        * lookup.sf[thidx]
-                    )
+                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b0[s_code.mcode] * lookup.sf[thidx]
             elif brc == 1:
                 if thidx <= 3:
                     if s_code.mcode < 4:
@@ -53,11 +49,7 @@ def reconstruct_channel_vals(
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (
-                        (-1) ** s_code.sign
-                        * lookup.nrl_b1[s_code.mcode]
-                        * lookup.sf[thidx]
-                    )
+                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b1[s_code.mcode] * lookup.sf[thidx]
             elif brc == 2:
                 if thidx <= 5:
                     if s_code.mcode < 6:
@@ -67,11 +59,7 @@ def reconstruct_channel_vals(
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (
-                        (-1) ** s_code.sign
-                        * lookup.nrl_b2[s_code.mcode]
-                        * lookup.sf[thidx]
-                    )
+                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b2[s_code.mcode] * lookup.sf[thidx]
             elif brc == 3:
                 if thidx <= 6:
                     if s_code.mcode < 9:
@@ -81,11 +69,7 @@ def reconstruct_channel_vals(
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (
-                        (-1) ** s_code.sign
-                        * lookup.nrl_b3[s_code.mcode]
-                        * lookup.sf[thidx]
-                    )
+                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b3[s_code.mcode] * lookup.sf[thidx]
             elif brc == 4:
                 if thidx <= 8:
                     if s_code.mcode < 15:
@@ -95,11 +79,7 @@ def reconstruct_channel_vals(
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (
-                        (-1) ** s_code.sign
-                        * lookup.nrl_b4[s_code.mcode]
-                        * lookup.sf[thidx]
-                    )
+                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b4[s_code.mcode] * lookup.sf[thidx]
             else:
                 logging.error("Unhandled reconstruction case")
 

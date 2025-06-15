@@ -85,9 +85,7 @@ def test_pack_10bit_samples() -> None:
 
     samples = [-511, 511, -188, 341]
     result = pack_10bit_samples(samples)
-    expected = pack_bits(
-        ["1111111111", "0111111111", "1010111100", "0101010101", "00000000"]
-    )
+    expected = pack_bits(["1111111111", "0111111111", "1010111100", "0101010101", "00000000"])
     assert result == expected
 
 

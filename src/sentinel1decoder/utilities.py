@@ -40,9 +40,7 @@ def range_dec_to_sample_rate(rgdec_code: int) -> float:
     elif rgdec_code == 11:
         return (16 / 11) * cnst.F_REF
     else:
-        raise Exception(
-            f"Invalid range decimation code {rgdec_code} supplied - valid codes are 0-11"
-        )
+        raise Exception(f"Invalid range decimation code {rgdec_code} supplied - valid codes are 0-11")
 
 
 def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:

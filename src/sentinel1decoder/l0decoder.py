@@ -68,19 +68,11 @@ class Level0Decoder:
         swath_numbers = input_header[cnst.SWATH_NUM_FIELD_NAME].unique()
         num_quads = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()
         if not len(swath_numbers) == 1:
-            logging.error(
-                f"Supplied mismatched header info - too many swath numbers {swath_numbers}"
-            )
-            raise Exception(
-                f"Received {len(swath_numbers)} swath numbers {swath_numbers}, expected 1."
-            )
+            logging.error(f"Supplied mismatched header info - too many swath numbers {swath_numbers}")
+            raise Exception(f"Received {len(swath_numbers)} swath numbers {swath_numbers}, expected 1.")
         if not len(num_quads) == 1:
-            logging.error(
-                f"Supplied mismatched header info - too many number of quads {num_quads}"
-            )
-            raise Exception(
-                f"Received {len(num_quads)} different number of quads {num_quads}, expected 1."
-            )
+            logging.error(f"Supplied mismatched header info - too many number of quads {num_quads}")
+            raise Exception(f"Received {len(num_quads)} different number of quads {num_quads}, expected 1.")
 
         packet_counter = 0
         packets_to_process = len(input_header)
@@ -149,9 +141,7 @@ class Level0Decoder:
         pkt_data_len = output_dictionary_row[cnst.PACKET_DATA_LEN_FIELD_NAME]
         packet_data_buffer = opened_file.read(pkt_data_len)
         if not packet_data_buffer:
-            raise Exception(
-                "Unexpectedly hit EOF while trying to read packet data field."
-            )
+            raise Exception("Unexpectedly hit EOF while trying to read packet data field.")
 
         secondary_hdr = hdrs.decode_secondary_header(packet_data_buffer[:62])
         output_dictionary_row.update(secondary_hdr)
