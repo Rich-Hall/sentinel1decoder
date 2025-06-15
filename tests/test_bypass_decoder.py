@@ -48,12 +48,7 @@ def test_decoding() -> None:
     io = [300, 301, 302]
     qe = [400, 401, 402]
     qo = [500, 501, 502]
-    data = (
-        pack_10bit_samples(ie)
-        + pack_10bit_samples(io)
-        + pack_10bit_samples(qe)
-        + pack_10bit_samples(qo)
-    )
+    data = pack_10bit_samples(ie) + pack_10bit_samples(io) + pack_10bit_samples(qe) + pack_10bit_samples(qo)
     decoder = BypassDecoder(data, 3)
     assert np.array_equal(decoder.i_evens, ie)
     assert np.array_equal(decoder.i_odds, io)
@@ -65,12 +60,7 @@ def test_decoding() -> None:
     io = [-300, -301, -302, -303]
     qe = [-400, -401, -402, -403]
     qo = [-500, -501, -502, -503]
-    data = (
-        pack_10bit_samples(ie)
-        + pack_10bit_samples(io)
-        + pack_10bit_samples(qe)
-        + pack_10bit_samples(qo)
-    )
+    data = pack_10bit_samples(ie) + pack_10bit_samples(io) + pack_10bit_samples(qe) + pack_10bit_samples(qo)
     decoder = BypassDecoder(data, 4)
     assert np.array_equal(decoder.i_evens, ie)
     assert np.array_equal(decoder.i_odds, io)

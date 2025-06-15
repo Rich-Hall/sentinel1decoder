@@ -213,9 +213,7 @@ def create_secondary_header(config: PacketConfig) -> bytes:
         | ((config.temperature_comp & 0x03) << 2)
     )
     # header[54-55] contain SAS SSB message (implementation depends on sas_ssbflag)
-    header[56] = ((config.calibration_mode & 0x03) << 6) | (
-        config.tx_pulse_number & 0x1F
-    )
+    header[56] = ((config.calibration_mode & 0x03) << 6) | (config.tx_pulse_number & 0x1F)
     header[57] = ((config.signal_type & 0x0F) << 4) | (config.swap_flag & 0x01)
     header[58] = config.swath_num
 
@@ -302,9 +300,7 @@ def create_synthetic_level0_packet(
     elif config.baq_mode in [11, 12, 13] and isinstance(const_value, str):
         data_section = create_synthetic_fdbaq_data(config, const_value)
     else:
-        raise ValueError(
-            f"Unsupported BAQ mode: {config.baq_mode} with const_value: {const_value}"
-        )
+        raise ValueError(f"Unsupported BAQ mode: {config.baq_mode} with const_value: {const_value}")
 
     data_length = len(data_section)
     primary_header = create_primary_header(config, data_length)

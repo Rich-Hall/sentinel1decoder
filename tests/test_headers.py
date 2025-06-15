@@ -202,19 +202,13 @@ def test_decode_secondary_header_values() -> None:
 
     txpsf_additive = expected_txprr / (4 * F_REF)
     txpsf_sign = (-1) ** (1 - (config.txpsf >> 15))
-    expected_txpsf = txpsf_additive + txpsf_sign * (config.txpsf & 0x7FFF) * F_REF / (
-        2**14
-    )
+    expected_txpsf = txpsf_additive + txpsf_sign * (config.txpsf & 0x7FFF) * F_REF / (2**14)
     assert decoded_header["Tx Pulse Start Frequency"] == pytest.approx(expected_txpsf)
 
-    assert decoded_header["Tx Pulse Length"] == pytest.approx(
-        config.tx_pulse_length / F_REF
-    )
+    assert decoded_header["Tx Pulse Length"] == pytest.approx(config.tx_pulse_length / F_REF)
     assert decoded_header["Rank"] == 17
     assert decoded_header["PRI"] == pytest.approx(config.pri / F_REF)
-    assert decoded_header["SWST"] == pytest.approx(
-        config.sampling_window_start_time / F_REF
-    )
+    assert decoded_header["SWST"] == pytest.approx(config.sampling_window_start_time / F_REF)
     assert decoded_header["SWL"] == pytest.approx(config.sampling_window_length / F_REF)
 
     assert decoded_header["SAS SSB Flag"] == 1

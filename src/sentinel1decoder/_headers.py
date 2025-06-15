@@ -22,9 +22,7 @@ def decode_primary_header(header_bytes: bytes) -> dict:
     """
     if not len(header_bytes) == 6:
         logging.error("Primary header must be exactly 6 bytes")
-        raise Exception(
-            f"Primary header must be exactly 6 bytes. Received {len(header_bytes)} bytes."
-        )
+        raise Exception(f"Primary header must be exactly 6 bytes. Received {len(header_bytes)} bytes.")
 
     tmp16 = int.from_bytes(header_bytes[:2], "big")
     packet_version_number = tmp16 >> 13  # Bit 0-2
@@ -73,9 +71,7 @@ def decode_secondary_header(header_bytes: bytes) -> dict:
     """
     if not len(header_bytes) == 62:
         logging.error("Secondary header must be exactly 62 bytes")
-        raise Exception(
-            f"Secondary header must be exactly 62 bytes. Received {len(header_bytes)} bytes."
-        )
+        raise Exception(f"Secondary header must be exactly 62 bytes. Received {len(header_bytes)} bytes.")
 
     # ---------------------------------------------------------
     # Datation service (6 bytes)

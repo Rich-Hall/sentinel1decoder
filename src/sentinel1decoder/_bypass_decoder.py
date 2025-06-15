@@ -68,36 +68,28 @@ class BypassDecoder:
 
         while index_10bit < self._num_quads:
             if index_10bit < self._num_quads:
-                s_code = (
-                    self._data[index_8bit] << 2 | self._data[index_8bit + 1] >> 6
-                ) & 1023
+                s_code = (self._data[index_8bit] << 2 | self._data[index_8bit + 1] >> 6) & 1023
                 output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
                 index_10bit += 1
             else:
                 break
 
             if index_10bit < self._num_quads:
-                s_code = (
-                    self._data[index_8bit + 1] << 4 | self._data[index_8bit + 2] >> 4
-                ) & 1023
+                s_code = (self._data[index_8bit + 1] << 4 | self._data[index_8bit + 2] >> 4) & 1023
                 output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
                 index_10bit += 1
             else:
                 break
 
             if index_10bit < self._num_quads:
-                s_code = (
-                    self._data[index_8bit + 2] << 6 | self._data[index_8bit + 3] >> 2
-                ) & 1023
+                s_code = (self._data[index_8bit + 2] << 6 | self._data[index_8bit + 3] >> 2) & 1023
                 output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
                 index_10bit += 1
             else:
                 break
 
             if index_10bit < self._num_quads:
-                s_code = (
-                    self._data[index_8bit + 3] << 8 | self._data[index_8bit + 4] >> 0
-                ) & 1023
+                s_code = (self._data[index_8bit + 3] << 8 | self._data[index_8bit + 4] >> 0) & 1023
                 output_array[index_10bit] = _ten_bit_unsigned_to_signed_int(s_code)
                 index_10bit += 1
             else:

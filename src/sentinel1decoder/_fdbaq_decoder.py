@@ -42,9 +42,7 @@ class FDBAQDecoder:
         self._q_evens_scodes: List[SampleCode] = []
         self._q_odds_scodes: List[SampleCode] = []
 
-        logging.debug(
-            f"Created FDBAQ decoder. Numquads={num_quads} NumBAQblocks={self._num_baq_blocks}"
-        )
+        logging.debug(f"Created FDBAQ decoder. Numquads={num_quads} NumBAQblocks={self._num_baq_blocks}")
 
         # Process all channels
         self._process_channel("IE", self._i_evens_scodes, read_brc=True)
@@ -104,16 +102,12 @@ class FDBAQDecoder:
 
     def _align_word_boundary(self) -> None:
         """Align reading position to next 16-bit word boundary."""
-        logging.debug(
-            f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
-        )
+        logging.debug(f"Finished block: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
         if self._bit_counter != 0:
             self._bit_counter = 0
             self._byte_counter += 1
         self._byte_counter = math.ceil(self._byte_counter / 2) * 2
-        logging.debug(
-            f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}"
-        )
+        logging.debug(f"Moved counters: bit_counter={self._bit_counter} byte_counter={self._byte_counter}")
 
     @property
     def brcs(self) -> List[int]:
