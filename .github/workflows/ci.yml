@@ -16,23 +16,20 @@ jobs:
       run: |
         docker build -t sentinel1-dev .
         docker run sentinel1-dev bash -c "
-          maturin develop &&
+          maturin develop --manifest-path rust/Cargo.toml &&
           pre-commit run --all-files &&
           pytest tests/ -v
         "
 
   build-package:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.11'
 
     - name: Install Rust
       run: |
@@ -45,12 +42,12 @@ jobs:
     - name: Build Wheel
       run: |
         mkdir -p target/wheels
-        maturin build --release --manifest-path rust/Cargo.toml --out target/wheels
+        maturin build --release --manifest-path rust/Cargo.toml --out target/wheels --interpreter python3.8 python3.9 python3.10 python3.11
 
     - name: Upload built wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}
+        name: wheels
         path: target/wheels/*.whl
 
   install-tests:
@@ -65,7 +62,7 @@ jobs:
     - name: Download built wheels
       uses: actions/download-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}
+        name: wheels
         path: target/wheels
 
     - name: Set up Python ${{ matrix.python-version }}
