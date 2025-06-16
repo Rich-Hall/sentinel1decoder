@@ -79,7 +79,7 @@ jobs:
         override: true
 
     - name: Regenerate Cargo.lock
-      run: cargo generate-lockfile --manifest-path /rust/Cargo.toml
+      run: cargo generate-lockfile --manifest-path rust/Cargo.toml
 
     - name: Verify Rust Setup
       run: |
