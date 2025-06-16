@@ -71,10 +71,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Rust
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 'stable'
+        override: true
+
+    - name: Verify and Log Rust Setup
       run: |
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        source $HOME/.cargo/env
+        rustc --version
+        cargo --version
 
     - name: Install Maturin
       run: pip install maturin
