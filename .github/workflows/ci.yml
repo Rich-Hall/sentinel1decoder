@@ -78,6 +78,11 @@ jobs:
         toolchain: ${{ matrix.rust-version }}
         override: true
 
+    - name: Verify Rust Setup
+      run: |
+        rustc --version
+        cargo --version
+
     - name: Install Maturin
       run: pip install maturin
 
