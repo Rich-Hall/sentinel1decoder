@@ -82,9 +82,6 @@ jobs:
         rustc --version
         cargo --version
 
-    - name: Regenerate Cargo.lock
-      run: cargo generate-lockfile --manifest-path rust/Cargo.toml
-
     - name: Install Maturin
       run: pip install maturin
 
