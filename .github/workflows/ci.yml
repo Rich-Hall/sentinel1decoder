@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
-        rust-version: ['stable']
+        rust-version: ['1.70.0', 'stable']
     steps:
     - uses: actions/checkout@v4
 
@@ -77,6 +77,9 @@ jobs:
       with:
         toolchain: ${{ matrix.rust-version }}
         override: true
+
+    - name: Regenerate Cargo.lock
+      run: cargo generate-lockfile --manifest-path /rust/Cargo.toml
 
     - name: Verify Rust Setup
       run: |
