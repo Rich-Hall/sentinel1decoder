@@ -63,7 +63,6 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
-        rust-version: ['1.70.0', 'stable']
     steps:
     - uses: actions/checkout@v4
 
@@ -72,11 +71,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Set up Rust ${{ matrix.rust-version }}
+    - name: Set up Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: ${{ matrix.rust-version }}
+        toolchain: 'stable'
         override: true
+
+    - name: Verify and Log Rust Setup
+      run: |
+        rustc --version
+        cargo --version
 
     - name: Regenerate Cargo.lock
       run: cargo generate-lockfile --manifest-path rust/Cargo.toml
@@ -94,7 +98,7 @@ jobs:
     - name: Upload Built Wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}-${{ matrix.rust-version }}
+        name: wheels-${{ matrix.python-version }}
         path: target/wheels/*.whl
 
   install-tests:
@@ -109,7 +113,7 @@ jobs:
     - name: Download Built Wheels
       uses: actions/download-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}-${{ matrix.rust-version }}
+        name: wheels-${{ matrix.python-version }}
         path: target/wheels
 
     - name: List Downloaded Wheels
