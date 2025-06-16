@@ -63,6 +63,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
+        rust-version: ['1.56.0', 'stable']
     steps:
     - uses: actions/checkout@v4
 
@@ -71,10 +72,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Rust
-      run: |
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        source $HOME/.cargo/env
+    - name: Set up Rust ${{ matrix.rust-version }}
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust-version }}
+        override: true
 
     - name: Install Maturin
       run: pip install maturin
