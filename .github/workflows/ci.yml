@@ -81,12 +81,6 @@ jobs:
     - name: Regenerate Cargo.lock
       run: cargo generate-lockfile --manifest-path rust/Cargo.toml
 
-    - name: Verify Rust Setup
-      run: |
-        rustc --version
-        cargo --version
-        pwd
-
     - name: Install Maturin
       run: pip install maturin
 
@@ -100,7 +94,7 @@ jobs:
     - name: Upload Built Wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}
+        name: wheels-${{ matrix.python-version }}-${{ matrix.rust-version }}
         path: target/wheels/*.whl
 
   install-tests:
@@ -115,7 +109,7 @@ jobs:
     - name: Download Built Wheels
       uses: actions/download-artifact@v4
       with:
-        name: wheels-${{ matrix.python-version }}
+        name: wheels-${{ matrix.python-version }}-${{ matrix.rust-version }}
         path: target/wheels
 
     - name: List Downloaded Wheels
