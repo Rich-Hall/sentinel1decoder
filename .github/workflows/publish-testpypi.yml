@@ -29,6 +29,9 @@ jobs:
       - name: Install Maturin
         run: python -m pip install --upgrade pip maturin
 
+      - name: Install Twine
+        run: python -m pip install --upgrade twine
+
       - name: Build wheels with Maturin
         run: maturin build --release --manylinux --interpreter $(which python)
 

@@ -32,6 +32,9 @@ jobs:
       - name: Build wheels with Maturin
         run: maturin build --release --manylinux --interpreter $(which python)
 
+      - name: Install Twine
+        run: python -m pip install --upgrade twine
+
       - name: Verify wheels
         run: python -m twine check target/wheels/*
 
