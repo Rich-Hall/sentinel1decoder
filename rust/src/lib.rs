@@ -1,12 +1,11 @@
 use pyo3::prelude::*;
 
 #[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
+fn sum_as_string(a: usize, b: usize) -> String {
     Ok((a + b).to_string())
 }
 
 #[pymodule]
-fn sentinel1decoder(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
-    Ok(())
+fn sentinel1decoder(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(sum_as_string, m)?)
 }
