@@ -8,7 +8,7 @@ name = "sentinel1decoder"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.21.2", features = ["extension-module"] }
 
 [package.metadata.maturin]
 # Optional: set the Python package name if different from the Rust crate name
