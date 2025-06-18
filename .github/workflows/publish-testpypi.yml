@@ -1,0 +1,42 @@
+name: Build and Publish Rust-Python Package to TestPyPI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-for-testpypi:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install Maturin
+        run: python -m pip install --upgrade pip maturin
+
+      - name: Build wheels with Maturin
+        run: maturin build --release --manylinux --interpreter $(which python)
+
+      - name: Verify wheels
+        run: python -m twine check target/wheels/*
+
+      - name: Publish to TestPyPI
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: python -m twine upload --repository testpypi target/wheels/*
