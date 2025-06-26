@@ -9,7 +9,8 @@ In a terminal window:
 ```
 pip install sentinel1decoder
 ```
-[Numpy](https://numpy.org/) and [Pandas](https://pandas.pydata.org/) are also required.
+
+This package requires python 3.8 or higher. [Numpy](https://numpy.org/) and [Pandas](https://pandas.pydata.org/) are also required.
 
 ## Usage
 

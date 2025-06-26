@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         - Decode Sentinel-1 Level 0 space packet metadata
         - Extract I/Q data from SAR instrument packets
         - Selective packet decoding capabilities
-    - **Utilities module**: 
+    - **Utilities module**:
         - Sub-commutated data extraction for satellite ephemeris
         - Helper functions for data processing
     - **Constants module**: Centralized constants and field names
@@ -36,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Details
 - Python 3.8+ compatibility
 - NumPy and Pandas dependencies
-- Rust-based performance-critical components
 - Comprehensive test suite
 - Pre-commit hooks for code quality
 - Automated CI/CD pipeline for PyPI publishing
@@ -57,4 +56,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced error handling
 - Extended documentation
 
-[1.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.0.0 
+[1.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.0.0
