@@ -7,9 +7,10 @@ This code is heavily based on an implementation in C by jmfriedt which can be fo
 
 In a terminal window:
 ```
-pip install git+https://github.com/Rich-Hall/sentinel1decoder
+pip install sentinel1decoder
 ```
-[Numpy](https://numpy.org/) and [Pandas](https://pandas.pydata.org/) are also required.
+
+This package requires python 3.8 or higher. [Numpy](https://numpy.org/) and [Pandas](https://pandas.pydata.org/) are also required.
 
 ## Usage
 
@@ -18,7 +19,7 @@ Import the package:
 import sentinel1decoder
 ```
 
-New - Level0File class wraps most of the below functionality, while also breaking the file into bursts of constant swath number/number of quads, to allow for easy handling.
+The Level0File class wraps most of the below functionality, while also breaking the file into bursts of constant swath number/number of quads, to allow for easy handling.
 
 Initialize a Level0File object:
 ```
