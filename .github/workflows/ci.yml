@@ -8,14 +8,17 @@ on:
 
 jobs:
   build-and-verify-installability:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: 3.x
+        python-version: ${{ matrix.python-version }}
 
     - name: Build wheels
       uses: PyO3/maturin-action@v1
@@ -25,14 +28,17 @@ jobs:
         sccache: false
         manylinux: auto
 
-    - name: Install and verify wheels
+    - name: Install and verify current Python wheel
       run: |
-        for wheel in dist/*.whl; do
-          echo "Testing wheel: $wheel"
-          pip install "$wheel"
-          python -c "import sentinel1decoder; print('Package imported successfully')"
-          pip uninstall -y sentinel1decoder
-        done
+        # Find the wheel for the current Python version
+        current_py=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+        echo "Current Python version: $current_py"
+        
+        # Install the matching wheel
+        wheel_file="dist/sentinel1decoder-*-${current_py}-*.whl"
+        echo "Installing wheel: $wheel_file"
+        pip install $wheel_file
+        python -c "import sentinel1decoder; print('Package imported successfully')"
 
   build-container:
     runs-on: ubuntu-latest
