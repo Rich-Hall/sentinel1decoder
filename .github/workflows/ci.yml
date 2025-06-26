@@ -33,7 +33,7 @@ jobs:
         # Find the wheel for the current Python version
         current_py=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
         echo "Current Python version: $current_py"
-        
+
         # Install the matching wheel
         wheel_file="dist/sentinel1decoder-*-${current_py}-*.whl"
         echo "Installing wheel: $wheel_file"
