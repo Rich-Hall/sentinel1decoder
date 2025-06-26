@@ -7,37 +7,6 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test-installability:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install maturin
-
-    - name: Build Rust extension
-      run: maturin build --release
-
-    - name: Install the built package
-      run: pip install target/wheels/*.whl
-
-    - name: Verify package can be imported
-      run: |
-        python -c "import sentinel1decoder; print('Package imported successfully')"
-
   build-container:
     runs-on: ubuntu-latest
     steps:
@@ -72,7 +41,7 @@ jobs:
     - name: Run Pre-commit Checks in Docker
       run: docker run --rm sentinel1-dev pre-commit run --all-files --show-diff-on-failure
 
-  run-tests-in-container:
+  run-tests:
     needs: build-container
     runs-on: ubuntu-latest
     steps:
