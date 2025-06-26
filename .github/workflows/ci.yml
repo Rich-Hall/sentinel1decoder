@@ -7,6 +7,32 @@ on:
     branches: [ main ]
 
 jobs:
+  build-and-verify-installability:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Build and verify package
+      uses: PyO3/maturin-action@v1
+      with:
+        args: --release --out dist --find-interpreter
+        sccache: false
+
+    - name: Install the built package
+      run: pip install dist/*.whl
+
+    - name: Verify package can be imported
+      run: |
+        python -c "import sentinel1decoder; print('Package imported successfully on Python ${{ matrix.python-version }}')"
+
   build-container:
     runs-on: ubuntu-latest
     steps:
