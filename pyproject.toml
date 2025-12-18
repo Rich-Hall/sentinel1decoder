@@ -50,7 +50,7 @@ dev = [
 
 [tool.maturin]
 python-source = "src"
-module-name = "sentinel1decoder"
+module-name = "sentinel1decoder._sentinel1decoder"
 manifest-path = "rust/Cargo.toml"
 manylinux = "2_34"
 interpreter = ["python3.8", "python3.9", "python3.10", "python3.11"]
@@ -63,6 +63,7 @@ profile = "black"
 multi_line_output = 3
 
 [tool.mypy]
+mypy_path = "src"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
