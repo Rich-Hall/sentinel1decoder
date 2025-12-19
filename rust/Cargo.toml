@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 
 [lib]
-name = "sentinel1decoder"
+name = "_sentinel1decoder"
 crate-type = ["cdylib"]
 
 [dependencies]

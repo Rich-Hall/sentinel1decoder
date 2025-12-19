@@ -1,9 +1,22 @@
 import logging
-from typing import List
+from typing import List, Tuple
 
 from sentinel1decoder._bypass_decoder import BypassDecoder
-from sentinel1decoder._fdbaq_decoder import FDBAQDecoder
+from sentinel1decoder._sample_code import SampleCode
 from sentinel1decoder._sample_value_reconstruction import reconstruct_channel_vals
+from sentinel1decoder._sentinel1decoder import decode_fdbaq
+
+
+def to_sample_codes(tuples: List[Tuple[bool, int]]) -> List[SampleCode]:
+    """Convert (bool, u8) tuples to SampleCode objects.
+
+    Args:
+        tuples: List of (bool, int) tuples
+
+    Returns:
+        List of SampleCode objects
+    """
+    return [SampleCode(1 if sign else 0, mcode) for sign, mcode in tuples]
 
 
 class UserDataDecoder:
@@ -55,11 +68,9 @@ class UserDataDecoder:
         elif self.baq_mode in (12, 13, 14):
             # FDBAQ data uses various types of Huffman encoding.
 
-            # Sample code extraction happens in FDBAQDedcoder __init__ function
-            # The extracted channel SCodes are properties of FDBAQDedcoder
-            scode_extractor = FDBAQDecoder(self.data, self.num_quads)
-            brcs = scode_extractor.brcs
-            thidxs = scode_extractor.thidxs
+            # Rust implementation of FDBAQ decoder
+            # Returns BRCs, THIDXs, and sample codes as tuples of (bool, u8)
+            brcs, thidxs, s_ie, s_io, s_qe, s_qo = decode_fdbaq(self.data, self.num_quads)
 
             logging.debug(f"Read BRCs: {brcs}")
             logging.debug(f"Read THIDXs: {thidxs}")
@@ -67,10 +78,10 @@ class UserDataDecoder:
             # Huffman-decoded sample codes are grouped into blocks, and can be
             # reconstructed using various lookup tables which cross-reference
             # that Block's Bit-Rate Code (BRC) and Threshold Index (THIDX)
-            IE = reconstruct_channel_vals(scode_extractor.s_ie, brcs, thidxs, self.num_quads)
-            IO = reconstruct_channel_vals(scode_extractor.s_io, brcs, thidxs, self.num_quads)
-            QE = reconstruct_channel_vals(scode_extractor.s_qe, brcs, thidxs, self.num_quads)
-            QO = reconstruct_channel_vals(scode_extractor.s_qo, brcs, thidxs, self.num_quads)
+            IE = reconstruct_channel_vals(to_sample_codes(s_ie), brcs, thidxs, self.num_quads)
+            IO = reconstruct_channel_vals(to_sample_codes(s_io), brcs, thidxs, self.num_quads)
+            QE = reconstruct_channel_vals(to_sample_codes(s_qe), brcs, thidxs, self.num_quads)
+            QO = reconstruct_channel_vals(to_sample_codes(s_qo), brcs, thidxs, self.num_quads)
 
         else:
             logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
