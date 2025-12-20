@@ -78,7 +78,7 @@ class Level0Decoder:
         packets_to_process = len(input_header)
         nq = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()[0]
 
-        output_data = np.zeros([packets_to_process, nq * 2], dtype=(complex))
+        output_data = np.zeros([packets_to_process, nq * 2], dtype=np.complex64)
 
         with open(self.filename, "rb") as f:
             # Each iteration of the below loop will process one space packet.
