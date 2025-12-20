@@ -1,9 +1,10 @@
 import logging
 from typing import List, Tuple
 
+import numpy as np
+
 from sentinel1decoder._bypass_decoder import BypassDecoder
 from sentinel1decoder._sample_code import SampleCode
-from sentinel1decoder._sample_value_reconstruction import reconstruct_channel_vals
 from sentinel1decoder._sentinel1decoder import decode_fdbaq
 
 
@@ -31,7 +32,7 @@ class UserDataDecoder:
         self.baq_mode = baq_mode
         self.num_quads = num_quads
 
-    def decode(self) -> List[complex]:
+    def decode(self) -> np.ndarray:
         """Decode the user data according to the specified encoding mode.
 
         Refer to SAR Space Protocol Data Unit specification document pg.56.
@@ -46,7 +47,7 @@ class UserDataDecoder:
 
         Returns
         -------
-        Complex array of decoded samples.
+        NumPy array of complex64 decoded samples (interleaved as IE+QE*j, IO+QO*j, ...).
         """
 
         # The decoding method used depends on the BAQ mode used.
@@ -60,6 +61,15 @@ class UserDataDecoder:
             QE = bypass_decoder.q_evens
             QO = bypass_decoder.q_odds
 
+            # Combine channels into interleaved complex samples: IE[i]+QE[i]j, IO[i]+QO[i]j, ...
+            # Create flat array with interleaved real/imaginary parts, then view as complex64
+            decoded_data = np.zeros(len(IE) * 4, dtype=np.float32)
+            decoded_data[0::4] = IE.astype(np.float32)  # real part of even samples
+            decoded_data[1::4] = QE.astype(np.float32)  # imag part of even samples
+            decoded_data[2::4] = IO.astype(np.float32)  # real part of odd samples
+            decoded_data[3::4] = QO.astype(np.float32)  # imag part of odd samples
+            decoded_data = decoded_data.view(np.complex64)
+
         elif self.baq_mode in (3, 4, 5):
             # TODO - Implement Data format type C decoding.
             logging.error("Attempted to decode data format C")
@@ -67,29 +77,11 @@ class UserDataDecoder:
 
         elif self.baq_mode in (12, 13, 14):
             # FDBAQ data uses various types of Huffman encoding.
-
-            # Rust implementation of FDBAQ decoder
-            # Returns BRCs, THIDXs, and sample codes as tuples of (bool, u8)
-            brcs, thidxs, s_ie, s_io, s_qe, s_qo = decode_fdbaq(self.data, self.num_quads)
-
-            logging.debug(f"Read BRCs: {brcs}")
-            logging.debug(f"Read THIDXs: {thidxs}")
-
-            # Huffman-decoded sample codes are grouped into blocks, and can be
-            # reconstructed using various lookup tables which cross-reference
-            # that Block's Bit-Rate Code (BRC) and Threshold Index (THIDX)
-            IE = reconstruct_channel_vals(to_sample_codes(s_ie), brcs, thidxs, self.num_quads)
-            IO = reconstruct_channel_vals(to_sample_codes(s_io), brcs, thidxs, self.num_quads)
-            QE = reconstruct_channel_vals(to_sample_codes(s_qe), brcs, thidxs, self.num_quads)
-            QO = reconstruct_channel_vals(to_sample_codes(s_qo), brcs, thidxs, self.num_quads)
+            # Rust implementation returns NumPy array of complex64 directly
+            decoded_data = decode_fdbaq(self.data, self.num_quads)
 
         else:
             logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
-
-        # Re-order the even-indexed and odd-indexed sample channels here.
-        decoded_data = []
-        for i in range(len(IE)):
-            decoded_data.append(complex(IE[i], QE[i]))
-            decoded_data.append(complex(IO[i], QO[i]))
+            raise ValueError(f"Invalid BAQ mode: {self.baq_mode}")
 
         return decoded_data

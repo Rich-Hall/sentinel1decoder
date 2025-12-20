@@ -150,14 +150,28 @@ pub(crate) const TREE_BRC_FOUR_CODES: &[HuffmanCode<(bool, u8)>] = &[
 ///
 /// # Returns
 ///
-/// A reference to the Huffman code table for the given BRC, or `None` if the BRC is invalid.
-pub(crate) fn get_huffman_codes(brc: u8) -> Option<&'static [HuffmanCode<(bool, u8)>]> {
+/// A reference to the Huffman code table for the given BRC.
+///
+/// # Panics
+///
+/// Panics if `brc` is not in the range 0-4.
+pub(crate) fn get_huffman_codes(brc: u8) -> &'static [HuffmanCode<(bool, u8)>] {
     match brc {
-        0 => Some(TREE_BRC_ZERO_CODES),
-        1 => Some(TREE_BRC_ONE_CODES),
-        2 => Some(TREE_BRC_TWO_CODES),
-        3 => Some(TREE_BRC_THREE_CODES),
-        4 => Some(TREE_BRC_FOUR_CODES),
-        _ => None,
+        0 => TREE_BRC_ZERO_CODES,
+        1 => TREE_BRC_ONE_CODES,
+        2 => TREE_BRC_TWO_CODES,
+        3 => TREE_BRC_THREE_CODES,
+        4 => TREE_BRC_FOUR_CODES,
+        _ => panic!("invalid BRC: expected 0-4"),
     }
 }
+
+// Get the number of possible unsigned sample values for a given BRC.
+// We use this when building and accessing a lookup table for sample value reconstruction.
+pub(crate) const NUM_OF_UNSIGNED_VALUES_PER_BRC: [usize; 5] = [
+    TREE_BRC_ZERO_CODES.len() / 2,
+    TREE_BRC_ONE_CODES.len() / 2,
+    TREE_BRC_TWO_CODES.len() / 2,
+    TREE_BRC_THREE_CODES.len() / 2,
+    TREE_BRC_FOUR_CODES.len() / 2,
+];

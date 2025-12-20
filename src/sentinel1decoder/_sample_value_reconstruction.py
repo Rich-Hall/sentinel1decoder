@@ -17,7 +17,7 @@ def reconstruct_channel_vals(
         logging.error("Mismatched lengths of BRC block parameters")
     num_brc_blocks = len(block_brcs)
 
-    out_vals = np.zeros(vals_to_process)
+    out_vals = np.zeros(vals_to_process, dtype=np.float32)
     n = 0
     # For each BRC block
     for block_index in range(num_brc_blocks):
@@ -33,53 +33,73 @@ def reconstruct_channel_vals(
             if brc == 0:
                 if thidx <= 3:
                     if s_code.mcode < 3:
-                        out_vals[n] = (-1) ** s_code.sign * s_code.mcode
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(s_code.mcode)
                     elif s_code.mcode == 3:
-                        out_vals[n] = (-1) ** s_code.sign * lookup.b0[thidx]
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(lookup.b0[thidx])
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b0[s_code.mcode] * lookup.sf[thidx]
+                    out_vals[n] = (
+                        np.float32((-1) ** s_code.sign)
+                        * np.float32(lookup.nrl_b0[s_code.mcode])
+                        * np.float32(lookup.sf[thidx])
+                    )
             elif brc == 1:
                 if thidx <= 3:
                     if s_code.mcode < 4:
-                        out_vals[n] = (-1) ** s_code.sign * s_code.mcode
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(s_code.mcode)
                     elif s_code.mcode == 4:
-                        out_vals[n] = (-1) ** s_code.sign * lookup.b1[thidx]
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(lookup.b1[thidx])
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b1[s_code.mcode] * lookup.sf[thidx]
+                    out_vals[n] = (
+                        np.float32((-1) ** s_code.sign)
+                        * np.float32(lookup.nrl_b1[s_code.mcode])
+                        * np.float32(lookup.sf[thidx])
+                    )
             elif brc == 2:
                 if thidx <= 5:
                     if s_code.mcode < 6:
-                        out_vals[n] = (-1) ** s_code.sign * s_code.mcode
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(s_code.mcode)
                     elif s_code.mcode == 6:
-                        out_vals[n] = (-1) ** s_code.sign * lookup.b2[thidx]
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(lookup.b2[thidx])
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b2[s_code.mcode] * lookup.sf[thidx]
+                    out_vals[n] = (
+                        np.float32((-1) ** s_code.sign)
+                        * np.float32(lookup.nrl_b2[s_code.mcode])
+                        * np.float32(lookup.sf[thidx])
+                    )
             elif brc == 3:
                 if thidx <= 6:
                     if s_code.mcode < 9:
-                        out_vals[n] = (-1) ** s_code.sign * s_code.mcode
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(s_code.mcode)
                     elif s_code.mcode == 9:
-                        out_vals[n] = (-1) ** s_code.sign * lookup.b3[thidx]
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(lookup.b3[thidx])
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b3[s_code.mcode] * lookup.sf[thidx]
+                    out_vals[n] = (
+                        np.float32((-1) ** s_code.sign)
+                        * np.float32(lookup.nrl_b3[s_code.mcode])
+                        * np.float32(lookup.sf[thidx])
+                    )
             elif brc == 4:
                 if thidx <= 8:
                     if s_code.mcode < 15:
-                        out_vals[n] = (-1) ** s_code.sign * s_code.mcode
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(s_code.mcode)
                     elif s_code.mcode == 15:
-                        out_vals[n] = (-1) ** s_code.sign * lookup.b4[thidx]
+                        out_vals[n] = np.float32((-1) ** s_code.sign) * np.float32(lookup.b4[thidx])
                     else:
                         logging.error("Unhandled reconstruction case")
                 else:
-                    out_vals[n] = (-1) ** s_code.sign * lookup.nrl_b4[s_code.mcode] * lookup.sf[thidx]
+                    out_vals[n] = (
+                        np.float32((-1) ** s_code.sign)
+                        * np.float32(lookup.nrl_b4[s_code.mcode])
+                        * np.float32(lookup.sf[thidx])
+                    )
             else:
                 logging.error("Unhandled reconstruction case")
 

@@ -11,36 +11,40 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
-use pyo3::types::PyList;
+use numpy::IntoPyArray;
+use num_complex::Complex32;
 
 use std::sync::LazyLock;
 
 mod huffman;
 mod huffman_codes;
+mod lookup_tables;
+mod sample_value_reconstruction;
 
 use crate::huffman::{HuffmanDecoderSampleCode, HuffmanDecodingState, HuffmanCode};
 use crate::huffman_codes::get_huffman_codes;
+use crate::sample_value_reconstruction::reconstruct_channel;
 
 // Lazy static cache of decoders for each BRC value
 static DECODERS: [LazyLock<HuffmanDecoderSampleCode>; 5] = [
     LazyLock::new(|| {
-        let codes = get_huffman_codes(0).unwrap();
+        let codes = get_huffman_codes(0);
         HuffmanDecoderSampleCode::from_huffman_codes(codes)
     }),
     LazyLock::new(|| {
-        let codes = get_huffman_codes(1).unwrap();
+        let codes = get_huffman_codes(1);
         HuffmanDecoderSampleCode::from_huffman_codes(codes)
     }),
     LazyLock::new(|| {
-        let codes = get_huffman_codes(2).unwrap();
+        let codes = get_huffman_codes(2);
         HuffmanDecoderSampleCode::from_huffman_codes(codes)
     }),
     LazyLock::new(|| {
-        let codes = get_huffman_codes(3).unwrap();
+        let codes = get_huffman_codes(3);
         HuffmanDecoderSampleCode::from_huffman_codes(codes)
     }),
     LazyLock::new(|| {
-        let codes = get_huffman_codes(4).unwrap();
+        let codes = get_huffman_codes(4);
         HuffmanDecoderSampleCode::from_huffman_codes(codes)
     }),
 ];
@@ -229,15 +233,10 @@ fn decode_channel(
 ///
 /// # Returns
 ///
-/// A tuple containing `(brcs, thidxs, s_ie, s_io, s_qe, s_qo)` where:
-/// - `brcs`: Bit Rate Codes for each block
-/// - `thidxs`: Threshold Index codes for each block
-/// - `s_ie`: Even-indexed I channel sample codes (list of `(sign, magnitude)` tuples)
-/// - `s_io`: Odd-indexed I channel sample codes (list of `(sign, magnitude)` tuples)
-/// - `s_qe`: Even-indexed Q channel sample codes (list of `(sign, magnitude)` tuples)
-/// - `s_qo`: Odd-indexed Q channel sample codes (list of `(sign, magnitude)` tuples)
+/// A list of complex numbers representing the decoded samples. The samples are interleaved:
+/// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
 #[pyfunction]
-fn decode_fdbaq(data: &[u8], num_quads: usize, py: Python) -> PyResult<(PyObject, PyObject, Vec<(bool, u8)>, Vec<(bool, u8)>, Vec<(bool, u8)>, Vec<(bool, u8)>)> {
+fn decode_fdbaq(data: &[u8], num_quads: usize, py: Python) -> PyResult<Py<PyAny>> {
     let mut byte_idx = 0;
 
     let mut brcs: Vec<u8> = Vec::new();
@@ -255,19 +254,23 @@ fn decode_fdbaq(data: &[u8], num_quads: usize, py: Python) -> PyResult<(PyObject
     // Decode QO channel (reuses BRCs)
     let s_qo = decode_channel(data, &mut byte_idx, num_quads, &mut brcs, &mut thidxs, false, false)?;
 
-    // Convert Vec<u8> to Python lists
-    // Convert u8 to i32 so PyO3 treats them as Python ints in a list, not bytes
-    let brcs_list = PyList::new(py, brcs.iter().map(|&x| x as i32))?.unbind();
-    let thidxs_list = PyList::new(py, thidxs.iter().map(|&x| x as i32))?.unbind();
+    // Reconstruct the sample values
+    let ie = reconstruct_channel(&s_ie, &brcs, &thidxs);
+    let io = reconstruct_channel(&s_io, &brcs, &thidxs);
+    let qe = reconstruct_channel(&s_qe, &brcs, &thidxs);
+    let qo = reconstruct_channel(&s_qo, &brcs, &thidxs);
 
-    Ok((
-        brcs_list.into(),
-        thidxs_list.into(),
-        s_ie,
-        s_io,
-        s_qe,
-        s_qo,
-    ))
+    // Combine channels into interleaved complex samples: IE[i]+QE[i]j, IO[i]+QO[i]j, ...
+    // Create a vector of Complex32 (which maps to NumPy's complex64 dtype)
+    let mut complex_samples = Vec::with_capacity(ie.len() * 2);
+    for i in 0..ie.len() {
+        complex_samples.push(Complex32::new(ie[i], qe[i]));  // IE[i] + QE[i]j
+        complex_samples.push(Complex32::new(io[i], qo[i]));  // IO[i] + QO[i]j
+    }
+
+    // Create NumPy array with complex64 dtype (two f32s per complex number)
+    // into_pyarray creates a PyArray1<Complex32> which NumPy sees as complex64
+    Ok(complex_samples.into_pyarray(py).to_owned().into())
 }
 
 /// Initialize the Python module.
