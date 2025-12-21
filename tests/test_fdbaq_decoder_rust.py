@@ -4,7 +4,10 @@ import numpy as np
 
 from sentinel1decoder._sample_code import SampleCode
 from sentinel1decoder._sample_value_reconstruction import reconstruct_channel_vals
-from sentinel1decoder._sentinel1decoder import decode_fdbaq
+from sentinel1decoder._sentinel1decoder import (
+    decode_batched_fdbaq_packets,
+    decode_single_fdbaq_packet,
+)
 
 from .data_generation_utils import PacketConfig, create_synthetic_fdbaq_data, pack_bits
 
@@ -75,7 +78,7 @@ def assert_complex_arrays_close(
 def test_fdbaq_decoder_brc0() -> None:
     config = PacketConfig(num_quads=128, const_brc=0, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "00")
-    complex_samples = decode_fdbaq(data, 128)
+    complex_samples = decode_single_fdbaq_packet(data, 128)
 
     # Check array properties
     assert isinstance(complex_samples, np.ndarray)
@@ -94,7 +97,7 @@ def test_fdbaq_decoder_brc0() -> None:
 
     config = PacketConfig(num_quads=1234, const_brc=0, const_thidx=63)
     data = create_synthetic_fdbaq_data(config, "010")
-    complex_samples = decode_fdbaq(data, 1234)
+    complex_samples = decode_single_fdbaq_packet(data, 1234)
 
     assert len(complex_samples) == 1234 * 2
     num_blocks = math.ceil(1234 / 128)
@@ -109,7 +112,7 @@ def test_fdbaq_decoder_brc0() -> None:
 
     config = PacketConfig(num_quads=37, const_brc=0, const_thidx=2)
     data = create_synthetic_fdbaq_data(config, "1110")
-    complex_samples = decode_fdbaq(data, 37)
+    complex_samples = decode_single_fdbaq_packet(data, 37)
 
     assert len(complex_samples) == 37 * 2
     num_blocks = math.ceil(37 / 128)
@@ -124,7 +127,7 @@ def test_fdbaq_decoder_brc0() -> None:
 
     config = PacketConfig(num_quads=55, const_brc=0, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "1111")
-    complex_samples = decode_fdbaq(data, 55)
+    complex_samples = decode_single_fdbaq_packet(data, 55)
 
     assert len(complex_samples) == 55 * 2
     num_blocks = math.ceil(55 / 128)
@@ -139,7 +142,7 @@ def test_fdbaq_decoder_brc0() -> None:
 
     config = PacketConfig(num_quads=123, const_brc=0, const_thidx=3)
     data = create_synthetic_fdbaq_data(config, "0111")
-    complex_samples = decode_fdbaq(data, 123)
+    complex_samples = decode_single_fdbaq_packet(data, 123)
 
     assert len(complex_samples) == 123 * 2
     num_blocks = math.ceil(123 / 128)
@@ -156,7 +159,7 @@ def test_fdbaq_decoder_brc0() -> None:
 def test_fdbaq_decoder_brc1() -> None:
     config = PacketConfig(num_quads=1234, const_brc=1, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "00")
-    complex_samples = decode_fdbaq(data, 1234)
+    complex_samples = decode_single_fdbaq_packet(data, 1234)
 
     assert len(complex_samples) == 1234 * 2
     num_blocks = math.ceil(1234 / 128)
@@ -171,7 +174,7 @@ def test_fdbaq_decoder_brc1() -> None:
 
     config = PacketConfig(num_quads=42, const_brc=1, const_thidx=63)
     data = create_synthetic_fdbaq_data(config, "010")
-    complex_samples = decode_fdbaq(data, 42)
+    complex_samples = decode_single_fdbaq_packet(data, 42)
 
     assert len(complex_samples) == 42 * 2
     num_blocks = math.ceil(42 / 128)
@@ -186,7 +189,7 @@ def test_fdbaq_decoder_brc1() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=1, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "11111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -201,7 +204,7 @@ def test_fdbaq_decoder_brc1() -> None:
 
     config = PacketConfig(num_quads=101, const_brc=1, const_thidx=101)
     data = create_synthetic_fdbaq_data(config, "01110")
-    complex_samples = decode_fdbaq(data, 101)
+    complex_samples = decode_single_fdbaq_packet(data, 101)
 
     assert len(complex_samples) == 101 * 2
     num_blocks = math.ceil(101 / 128)
@@ -218,7 +221,7 @@ def test_fdbaq_decoder_brc1() -> None:
 def test_fdbaq_decoder_brc2() -> None:
     config = PacketConfig(num_quads=1234, const_brc=2, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "00")
-    complex_samples = decode_fdbaq(data, 1234)
+    complex_samples = decode_single_fdbaq_packet(data, 1234)
 
     assert len(complex_samples) == 1234 * 2
     num_blocks = math.ceil(1234 / 128)
@@ -233,7 +236,7 @@ def test_fdbaq_decoder_brc2() -> None:
 
     config = PacketConfig(num_quads=42, const_brc=2, const_thidx=63)
     data = create_synthetic_fdbaq_data(config, "0111111")
-    complex_samples = decode_fdbaq(data, 42)
+    complex_samples = decode_single_fdbaq_packet(data, 42)
 
     assert len(complex_samples) == 42 * 2
     num_blocks = math.ceil(42 / 128)
@@ -248,7 +251,7 @@ def test_fdbaq_decoder_brc2() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=2, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "1111111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -263,7 +266,7 @@ def test_fdbaq_decoder_brc2() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=2, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "1111110")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -280,7 +283,7 @@ def test_fdbaq_decoder_brc2() -> None:
 def test_fdbaq_decoder_brc3() -> None:
     config = PacketConfig(num_quads=1234, const_brc=3, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "000")
-    complex_samples = decode_fdbaq(data, 1234)
+    complex_samples = decode_single_fdbaq_packet(data, 1234)
 
     assert len(complex_samples) == 1234 * 2
     num_blocks = math.ceil(1234 / 128)
@@ -295,7 +298,7 @@ def test_fdbaq_decoder_brc3() -> None:
 
     config = PacketConfig(num_quads=42, const_brc=3, const_thidx=63)
     data = create_synthetic_fdbaq_data(config, "110")
-    complex_samples = decode_fdbaq(data, 42)
+    complex_samples = decode_single_fdbaq_packet(data, 42)
 
     assert len(complex_samples) == 42 * 2
     num_blocks = math.ceil(42 / 128)
@@ -310,7 +313,7 @@ def test_fdbaq_decoder_brc3() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=3, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "111111111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -325,7 +328,7 @@ def test_fdbaq_decoder_brc3() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=3, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "111111110")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -340,7 +343,7 @@ def test_fdbaq_decoder_brc3() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=3, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "011111111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -357,7 +360,7 @@ def test_fdbaq_decoder_brc3() -> None:
 def test_fdbaq_decoder_brc4() -> None:
     config = PacketConfig(num_quads=1234, const_brc=4, const_thidx=0)
     data = create_synthetic_fdbaq_data(config, "000")
-    complex_samples = decode_fdbaq(data, 1234)
+    complex_samples = decode_single_fdbaq_packet(data, 1234)
 
     assert len(complex_samples) == 1234 * 2
     num_blocks = math.ceil(1234 / 128)
@@ -372,7 +375,7 @@ def test_fdbaq_decoder_brc4() -> None:
 
     config = PacketConfig(num_quads=42, const_brc=4, const_thidx=63)
     data = create_synthetic_fdbaq_data(config, "1100")
-    complex_samples = decode_fdbaq(data, 42)
+    complex_samples = decode_single_fdbaq_packet(data, 42)
 
     assert len(complex_samples) == 42 * 2
     num_blocks = math.ceil(42 / 128)
@@ -387,7 +390,7 @@ def test_fdbaq_decoder_brc4() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=4, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "1111111111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -402,7 +405,7 @@ def test_fdbaq_decoder_brc4() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=4, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "1111111110")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -417,7 +420,7 @@ def test_fdbaq_decoder_brc4() -> None:
 
     config = PacketConfig(num_quads=99, const_brc=4, const_thidx=11)
     data = create_synthetic_fdbaq_data(config, "0111111111")
-    complex_samples = decode_fdbaq(data, 99)
+    complex_samples = decode_single_fdbaq_packet(data, 99)
 
     assert len(complex_samples) == 99 * 2
     num_blocks = math.ceil(99 / 128)
@@ -484,7 +487,7 @@ def test_fdbaq_decoder_variable_brc() -> None:
     )
     data = ie_bits + io_bits + qe_bits + qo_bits
 
-    complex_samples = decode_fdbaq(data, 128 * 5)
+    complex_samples = decode_single_fdbaq_packet(data, 128 * 5)
 
     # Check array properties
     assert len(complex_samples) == (128 * 5) * 2
@@ -506,3 +509,146 @@ def test_fdbaq_decoder_variable_brc() -> None:
     expected_array[0::2] = ie_qe  # Even indices: IE+QE*j
     expected_array[1::2] = io_qo  # Odd indices: IO+QO*j
     assert_complex_arrays_close(complex_samples, expected_array, rtol=1e-5, atol=1e-6)
+
+
+def test_batched_fdbaq_decoder_same_config() -> None:
+    """Test batched decode with multiple packets of the same configuration."""
+    # Create multiple packets with same config
+    config = PacketConfig(num_quads=128, const_brc=1, const_thidx=5)
+    num_packets = 5
+    huffman_pattern = "010"
+
+    # Generate multiple identical packets
+    packet_data_list = [create_synthetic_fdbaq_data(config, huffman_pattern) for _ in range(num_packets)]
+
+    # Decode using batched function
+    batched_result = decode_batched_fdbaq_packets(packet_data_list, config.num_quads)
+
+    # Check array properties
+    assert isinstance(batched_result, np.ndarray)
+    assert batched_result.dtype == np.complex64
+    assert batched_result.shape == (num_packets, config.num_quads * 2)
+
+    # Decode one packet individually for expected values
+    single_result = decode_single_fdbaq_packet(packet_data_list[0], config.num_quads)
+
+    # All packets should decode to the same result
+    for i in range(num_packets):
+        np.testing.assert_array_equal(
+            batched_result[i], single_result, err_msg=f"Packet {i} should match single decode result"
+        )
+
+    # Verify expected values match reconstruction
+    num_blocks = math.ceil(config.num_quads / 128)
+    sample_codes = [SampleCode(0, 1)] * config.num_quads
+    expected_vals = reconstruct_channel_vals(
+        sample_codes, [config.const_brc] * num_blocks, [config.const_thidx] * num_blocks, config.num_quads
+    )
+    ie_qe = np.array([complex(ie, qe) for ie, qe in zip(expected_vals, expected_vals)], dtype=np.complex64)
+    io_qo = np.array([complex(io, qo) for io, qo in zip(expected_vals, expected_vals)], dtype=np.complex64)
+    expected_array = np.empty(len(ie_qe) * 2, dtype=np.complex64)
+    expected_array[0::2] = ie_qe  # Even indices: IE+QE*j
+    expected_array[1::2] = io_qo  # Odd indices: IO+QO*j
+
+    assert_complex_arrays_close(batched_result[0], expected_array, rtol=1e-5, atol=1e-6)
+
+
+def test_batched_fdbaq_decoder_different_configs() -> None:
+    """Test batched decode with multiple packets of different configurations."""
+    # The batched function expects all packets to have the same num_quads
+    # So we test with packets that have the same num_quads but different BRC/THIDX/patterns
+    num_quads = 128
+    packet_configs_same_size = [
+        PacketConfig(num_quads=num_quads, const_brc=0, const_thidx=0),
+        PacketConfig(num_quads=num_quads, const_brc=1, const_thidx=5),
+        PacketConfig(num_quads=num_quads, const_brc=2, const_thidx=10),
+        PacketConfig(num_quads=num_quads, const_brc=3, const_thidx=20),
+        PacketConfig(num_quads=num_quads, const_brc=4, const_thidx=30),
+    ]
+
+    huffman_patterns_same_size = [
+        "00",  # BRC 0: sign=0, magnitude=0
+        "010",  # BRC 1: sign=0, magnitude=1
+        "0111111",  # BRC 2: sign=0, magnitude=6
+        "111111111",  # BRC 3: sign=1, magnitude=9
+        "1111111111",  # BRC 4: sign=1, magnitude=15
+    ]
+
+    # Map huffman patterns to their documented magnitudes
+    pattern_to_magnitude = {
+        "00": 0,
+        "010": 1,
+        "0111111": 6,
+        "111111111": 9,
+        "1111111111": 15,
+    }
+
+    # Create packet data for each configuration
+    packet_data_list = []
+    expected_results = []
+
+    for config, huffman_pattern in zip(packet_configs_same_size, huffman_patterns_same_size):
+        packet_data = create_synthetic_fdbaq_data(config, huffman_pattern)
+        packet_data_list.append(packet_data)
+
+        # Decode individually to get expected result
+        single_result = decode_single_fdbaq_packet(packet_data, num_quads)
+        expected_results.append(single_result)
+
+    # Decode using batched function
+    batched_result = decode_batched_fdbaq_packets(packet_data_list, num_quads)
+
+    # Check array properties
+    assert isinstance(batched_result, np.ndarray)
+    assert batched_result.dtype == np.complex64
+    assert batched_result.shape == (len(packet_configs_same_size), num_quads * 2)
+
+    # Verify each packet decodes correctly
+    for i, (packet_data, expected) in enumerate(zip(packet_data_list, expected_results)):
+        # Batched result should match single decode
+        try:
+            assert_complex_arrays_close(batched_result[i], expected, rtol=1e-5, atol=1e-6)
+        except AssertionError as e:
+            # Add diagnostic information about packet ordering
+            error_msg = [f"Packet {i} batched result should match single decode result: {e}"]
+            error_msg.append("\nFirst 10 values of each packet (in returned order):")
+            for j in range(len(packet_configs_same_size)):
+                packet_vals = batched_result[j][:10]
+                error_msg.append(f"  Packet {j}: {packet_vals}")
+            error_msg.append("\nFirst 10 values of expected result for this packet:")
+            error_msg.append(f"  Expected: {expected[:10]}")
+            error_msg.append(f"  Actual:   {batched_result[i][:10]}")
+            raise AssertionError("\n".join(error_msg)) from e
+
+        # Verify expected values match reconstruction
+        config = packet_configs_same_size[i]
+        num_blocks = math.ceil(config.num_quads / 128)
+
+        # Extract sign and magnitude from huffman pattern
+        huffman_pattern = huffman_patterns_same_size[i]
+        sign = int(huffman_pattern[0])
+        magnitude = pattern_to_magnitude[huffman_pattern]
+
+        sample_codes = [SampleCode(sign, magnitude)] * config.num_quads
+        expected_vals = reconstruct_channel_vals(
+            sample_codes, [config.const_brc] * num_blocks, [config.const_thidx] * num_blocks, config.num_quads
+        )
+        ie_qe = np.array([complex(ie, qe) for ie, qe in zip(expected_vals, expected_vals)], dtype=np.complex64)
+        io_qo = np.array([complex(io, qo) for io, qo in zip(expected_vals, expected_vals)], dtype=np.complex64)
+        expected_array = np.empty(len(ie_qe) * 2, dtype=np.complex64)
+        expected_array[0::2] = ie_qe  # Even indices: IE+QE*j
+        expected_array[1::2] = io_qo  # Odd indices: IO+QO*j
+
+        try:
+            assert_complex_arrays_close(batched_result[i], expected_array, rtol=1e-5, atol=1e-6)
+        except AssertionError as e:
+            # Add diagnostic information about packet ordering
+            error_msg = [f"Packet {i} should match expected reconstructed values: {e}"]
+            error_msg.append("\nFirst 10 values of each packet (in returned order):")
+            for j in range(len(packet_configs_same_size)):
+                packet_vals = batched_result[j][:10]
+                error_msg.append(f"  Packet {j}: {packet_vals}")
+            error_msg.append("\nFirst 10 values of expected reconstructed result for this packet:")
+            error_msg.append(f"  Expected: {expected_array[:10]}")
+            error_msg.append(f"  Actual:   {batched_result[i][:10]}")
+            raise AssertionError("\n".join(error_msg)) from e

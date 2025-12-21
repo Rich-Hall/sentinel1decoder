@@ -5,7 +5,7 @@ import numpy as np
 
 from sentinel1decoder._bypass_decoder import BypassDecoder
 from sentinel1decoder._sample_code import SampleCode
-from sentinel1decoder._sentinel1decoder import decode_fdbaq
+from sentinel1decoder._sentinel1decoder import decode_single_fdbaq_packet
 
 
 def to_sample_codes(tuples: List[Tuple[bool, int]]) -> List[SampleCode]:
@@ -78,7 +78,7 @@ class UserDataDecoder:
         elif self.baq_mode in (12, 13, 14):
             # FDBAQ data uses various types of Huffman encoding.
             # Rust implementation returns NumPy array of complex64 directly
-            decoded_data = decode_fdbaq(self.data, self.num_quads)
+            decoded_data = decode_single_fdbaq_packet(self.data, self.num_quads)
 
         else:
             logging.error(f"Attempted to decode using invalid BAQ mode: {self.baq_mode}")
