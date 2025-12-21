@@ -6,7 +6,10 @@ import pandas as pd
 
 from sentinel1decoder import _headers as hdrs
 from sentinel1decoder import constants as cnst
-from sentinel1decoder._user_data_decoder import UserDataDecoder
+from sentinel1decoder._sentinel1decoder import (
+    decode_batched_bypass_packets,
+    decode_batched_fdbaq_packets,
+)
 
 
 class Level0Decoder:
@@ -44,75 +47,74 @@ class Level0Decoder:
         output_dataframe = pd.DataFrame(output_row_list)
         return output_dataframe
 
-    def decode_packets(self, input_header: pd.DataFrame) -> np.ndarray:
-        """Decode the user data payload from the specified space packets.
+    def decode_packets(self, input_header: pd.DataFrame, batch_size: int = 256) -> np.ndarray:
+        """
+        Decode the data payload from the specified packets.
 
-        Packet data typically consists of a single radar echo. SAR images are
-        built from multiple radar echoes.
+        The input header should be a dataframe of header data, filtered to only include
+        the packets to decode. The selected packets should have the same swath number,
+        number of quads, and BAQ mode.
+
+        The decoder will multithread the decoding of packets in batches of the specified size.
+        Multithreading the calling of this function is therefore not recommended.
 
         Args:
-            input_header:   A DataFrame containing the packets to be processed. Expected usage
-                            is to call decode_metadata to return the full set of packets in the
-                            file, select the desired packets from these, and supply the result
-                            as the input to this function.
+            input_header: A Pandas dataframe of the header information for the packets to decode.
+            batch_size: The number of packets to batch together for parallelized decoding.
 
         Returns:
-            The complex I/Q values outputted by the Sentinel-1 SAR instrument
-            and downlinked in the specified space packets.
-
+            A NumPy array of the decoded data, with dimensions (num_packets, num_quads * 2).
         """
-        # Check we can output this data as a single block.
-        # TODO: More rigorous checks here
-        # TODO: Fix checks when only one packet supplied as input_header
-        # TODO: Report progress since this takes a long time
         swath_numbers = input_header[cnst.SWATH_NUM_FIELD_NAME].unique()
-        num_quads = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()
-        if not len(swath_numbers) == 1:
-            logging.error(f"Supplied mismatched header info - too many swath numbers {swath_numbers}")
-            raise Exception(f"Received {len(swath_numbers)} swath numbers {swath_numbers}, expected 1.")
-        if not len(num_quads) == 1:
-            logging.error(f"Supplied mismatched header info - too many number of quads {num_quads}")
-            raise Exception(f"Received {len(num_quads)} different number of quads {num_quads}, expected 1.")
+        num_quads_values = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()
+        baq_modes = input_header[cnst.BAQ_MODE_FIELD_NAME].unique()
 
-        packet_counter = 0
-        packets_to_process = len(input_header)
-        nq = input_header[cnst.NUM_QUADS_FIELD_NAME].unique()[0]
+        if len(swath_numbers) != 1:
+            raise ValueError("Multiple swath numbers found")
+        if len(num_quads_values) != 1:
+            raise ValueError("Multiple num_quads values found")
+        if len(baq_modes) != 1:
+            raise ValueError("Multiple BAQ modes found")
 
-        output_data = np.zeros([packets_to_process, nq * 2], dtype=np.complex64)
+        num_quads = num_quads_values[0]
+        baq_mode = baq_modes[0]
+
+        if baq_mode in (12, 13, 14):
+            batch_decoder = decode_batched_fdbaq_packets
+        elif baq_mode == 0:
+            batch_decoder = decode_batched_bypass_packets
+        elif baq_mode in (3, 4, 5):
+            raise NotImplementedError("Data format C not implemented")
+        else:
+            raise ValueError(f"Invalid BAQ mode: {baq_mode}")
+
+        desired_packet_counts = set(input_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME].values)
+
+        output_data = np.zeros((len(desired_packet_counts), num_quads * 2), dtype=np.complex64)
+
+        batch = []
+        output_idx = 0
 
         with open(self.filename, "rb") as f:
-            # Each iteration of the below loop will process one space packet.
-            # An input file typically consists of many packets.
-            while packet_counter < packets_to_process:
+            while output_idx < len(desired_packet_counts):
                 try:
-                    this_header, packet_data_bytes = self._read_single_packet(f)
+                    header, payload = self._read_single_packet(f)
                 except NoMorePacketsException:
                     break
 
-                # Comparing space packet count is faster than comparing entire row
-                if (
-                    this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]
-                    in input_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME].values
-                ):
-                    logging.debug(f"Decoding data from packet: {this_header}")
-                    try:
-                        baqmod = this_header[cnst.BAQ_MODE_FIELD_NAME]
-                        nq = this_header[cnst.NUM_QUADS_FIELD_NAME]
-                        data_decoder = UserDataDecoder(packet_data_bytes, baqmod, nq)
-                        this_data_packet = data_decoder.decode()
-                        output_data[packet_counter, :] = this_data_packet
-                    except Exception as e:
-                        logging.error(
-                            (
-                                f"Failed to process packet {packet_counter} "
-                                f"with Space Packet Count {this_header[cnst.SPACE_PACKET_COUNT_FIELD_NAME]}\n{e}"
-                            )
-                        )
-                        output_data[packet_counter, :] = 0
+                if header[cnst.SPACE_PACKET_COUNT_FIELD_NAME] in desired_packet_counts:
+                    batch.append(payload)
 
-                    logging.debug("Finished decoding packet data")
+                if len(batch) == batch_size:
+                    decoded = batch_decoder(batch, num_quads)
+                    output_data[output_idx : output_idx + len(decoded), :] = decoded
+                    output_idx += len(decoded)
+                    batch.clear()
 
-                    packet_counter += 1
+            # Flush remainder
+            if batch:
+                decoded = batch_decoder(batch, num_quads)
+                output_data[output_idx : output_idx + len(decoded), :] = decoded
 
         return output_data
 
