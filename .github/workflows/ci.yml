@@ -89,4 +89,4 @@ jobs:
       run: gunzip -c sentinel1-dev.tar.gz | docker load
 
     - name: Run Tests in Docker
-      run: docker run --rm sentinel1-dev pytest tests/ -v
+      run: docker run --rm -w /app sentinel1-dev pytest -v
