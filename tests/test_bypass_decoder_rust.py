@@ -1,11 +1,57 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
+import pytest
 
 from sentinel1decoder._sentinel1decoder import (
     decode_batched_bypass_packets,
     decode_single_bypass_packet,
 )
 
-from .data_generation_utils import pack_10bit_samples
+from .data_generation_utils import pack_10bit_samples, pack_bits
+
+if TYPE_CHECKING:
+    from tests.conftest import BypassSpecExample
+
+
+@pytest.mark.parametrize(
+    "example_index",
+    [0],  # Add more indices as more examples are added to conftest
+    ids=["bypass_example_1"],
+)
+def test_bypass_spec_examples(example_index: int, bypass_spec_examples: list[BypassSpecExample]) -> None:
+    """Test bypass decoder against spec examples from conftest."""
+    example = bypass_spec_examples[example_index]
+
+    # Create packet data using pack_bits directly
+    # Bypass mode: 4 channels (IE, IO, QE, QO), each with 1 quad (10-bit sample)
+    # pack_bits with pack_to_16_bits=True pads to 16-bit boundaries
+    ie_data = pack_bits([example.bits], pack_to_16_bits=True)
+    io_data = pack_bits([example.bits], pack_to_16_bits=True)
+    qe_data = pack_bits([example.bits], pack_to_16_bits=True)
+    qo_data = pack_bits([example.bits], pack_to_16_bits=True)
+
+    data = ie_data + io_data + qe_data + qo_data
+
+    # Decode the packet
+    decoded = decode_single_bypass_packet(data, num_quads=1)
+
+    # Expected result: all channels should decode to the expected value
+    expected = np.array(
+        [
+            complex(example.expected_value, example.expected_value),
+            complex(example.expected_value, example.expected_value),
+        ],
+        dtype=np.complex64,
+    )
+
+    np.testing.assert_allclose(
+        decoded,
+        expected,
+        rtol=1e-6,
+        atol=1e-6,
+        err_msg=f"Spec example page {example.page}: {example.description}",
+    )
 
 
 def test_decoding() -> None:
