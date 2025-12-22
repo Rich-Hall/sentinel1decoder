@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-21
+
+### Features
+- *Significant* optimization of the core decoding functions
+    - Notional decoding time for a burst down to ~30 seconds (was ~40 mins)
+
+### Technical Details
+- FDBAQ and Bypass decoding functions moved from Python to Rust
+- We now batch multiple packets together and multithread their decoding
+- Improved FDBAQ decoding logic based upon constructed lookup tables
+- We now explicitly return complex64 (i.e. float32s) type data
+
+### Documentation
+- Rewrote main readme
+
 ## [1.0.0] - 2025-06-25
 
 ### Added
@@ -51,9 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Performance optimizations
 - Additional decoder implementations
 - Enhanced error handling
 - Extended documentation
 
+[1.1.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.0.0
