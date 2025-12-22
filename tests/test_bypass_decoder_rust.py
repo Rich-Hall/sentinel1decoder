@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 import numpy as np
 import pytest
 
@@ -7,11 +5,9 @@ from sentinel1decoder._sentinel1decoder import (
     decode_batched_bypass_packets,
     decode_single_bypass_packet,
 )
+from tests.conftest import BypassSpecExample
 
 from .data_generation_utils import pack_10bit_samples, pack_bits
-
-if TYPE_CHECKING:
-    from tests.conftest import BypassSpecExample
 
 
 @pytest.mark.parametrize(

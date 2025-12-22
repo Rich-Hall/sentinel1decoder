@@ -1,5 +1,4 @@
 import itertools
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -8,14 +7,12 @@ from sentinel1decoder._sentinel1decoder import (
     decode_batched_fdbaq_packets,
     decode_single_fdbaq_packet,
 )
+from tests.conftest import FDBAQSpecExample
 from tests.data_generation_utils import (
     PacketConfig,
     create_synthetic_fdbaq_data,
     pack_bits,
 )
-
-if TYPE_CHECKING:
-    from tests.conftest import FDBAQSpecExample
 
 
 @pytest.mark.parametrize(
