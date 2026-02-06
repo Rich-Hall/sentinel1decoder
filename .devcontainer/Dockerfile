@@ -1,8 +1,12 @@
-# Shared base stage - contains common setup used by both CI and devcontainer
-# This ensures both environments stay in sync
+# Devcontainer-specific Dockerfile
+# Optimized for development: installs dependencies but doesn't copy source
+# (source is mounted as volume by devcontainer)
 #
-# SYNC NOTE: The "base" stage below should match the "base" stage in .devcontainer/Dockerfile.
+# SYNC NOTE: The base stage below should match the "base" stage in ../Dockerfile.
 # When updating Python version, Rust setup, or system dependencies, update BOTH files.
+# Consider this a temporary duplication until Docker supports cross-file stage references.
+
+# Build the shared base stage (must match ../Dockerfile base stage exactly)
 FROM python:3.11-slim as base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -32,16 +36,16 @@ WORKDIR /app
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Final stage for CI/root Dockerfile - includes source code and package installation
+# Devcontainer-specific stage: extends base but doesn't copy source
 FROM base
 
-# Copy dependency files first for better layer caching
-# This layer will be cached if dependencies don't change
-COPY pyproject.toml rust/Cargo.toml rust/Cargo.lock* ./
-COPY rust/Cargo.toml rust/
+# Copy only dependency files for better layer caching
+# Source code will be mounted as volume by devcontainer
+COPY pyproject.toml ./
 
 # Install Python dependencies (without package, for caching)
-# We'll install the package itself after copying source code
+# The package itself will be installed via maturin develop in postCreateCommand
+# This matches the dependencies in ../Dockerfile - keep in sync manually
 RUN pip install --no-cache-dir \
     "maturin>=1.4.0" \
     "numpy>=1.24" \
@@ -61,20 +65,13 @@ RUN pip install --no-cache-dir \
     matplotlib \
     pandas-stubs
 
-# Copy the rest of the project files
-COPY . .
-
-# Install the package in editable mode (this will skip already-installed dependencies)
-RUN pip install --no-cache-dir -e ".[dev]"
-
-# Create an improved entrypoint script that conditionally rebuilds Rust extension
+# Create an improved entrypoint script
+# This will be overridden by devcontainer, but useful as fallback
 RUN echo '#!/bin/bash\n\
 set -e\n\
-source /opt/venv/bin/activate\n\
 cd /app\n\
-# Rebuild Rust extension if explicitly requested or if running in CI\n\
-# In CI, always rebuild; in interactive use, only if REBUILD_RUST is set\n\
-if [ -n "$REBUILD_RUST" ] || [ -n "$CI" ]; then\n\
+# Only rebuild if explicitly requested or if this is not a devcontainer\n\
+if [ -n "$REBUILD_RUST" ] || [ -z "$REMOTE_CONTAINERS" ]; then\n\
     echo "Building Rust extension with maturin..."\n\
     maturin develop\n\
 fi\n\

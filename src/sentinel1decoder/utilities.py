@@ -1,46 +1,63 @@
 import struct
+from typing import Union
 
 import numpy as np
 import pandas as pd
 
-from sentinel1decoder import constants as cnst
+from sentinel1decoder import _field_names as fn
+from sentinel1decoder.enums import RangeDecimation
 
 
-def range_dec_to_sample_rate(rgdec_code: int) -> float:
+def rename_packet_metadata_columns_to_raw(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename decoded column names to raw (spec-style) names.
+
+    Only renames columns that are present and have a raw counterpart.
+    No-op if DataFrame already has raw names; returns input unchanged.
+
+    Args:
+        df: DataFrame with decoded or mixed column names.
+
+    Returns:
+        DataFrame with raw column names where applicable.
+    """
+    rename_map = {old: new for old, new in fn.DECODED_TO_RAW_NAME.items() if old in df.columns}
+    if not rename_map:
+        return df
+    return df.rename(columns=rename_map)
+
+
+def rename_packet_metadata_columns_to_decoded(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename raw (spec-style) column names to human-readable decoded names.
+
+    Only renames columns that are present and have a decoded counterpart.
+    No-op if DataFrame already has decoded names; returns input unchanged.
+
+    Args:
+        df: DataFrame with raw or mixed column names.
+
+    Returns:
+        DataFrame with decoded column names where applicable.
+    """
+    rename_map = {old: new for old, new in fn.RAW_TO_DECODED_NAME.items() if old in df.columns}
+    if not rename_map:
+        return df
+    return df.rename(columns=rename_map)
+
+
+def range_dec_to_sample_rate(rgdec: Union[int, RangeDecimation]) -> float:
     """
     Convert range decimation code to sample rate.
 
     Args:
-        rgdec_code: Range decimation code
+        rgdec: Range decimation code (int) or RangeDecimation enum member.
 
     Returns:
-        Sample rate for this range decimation code.
+        Sample rate for this range decimation code in Hz.
 
     """
-    if rgdec_code == 0:
-        return 3 * cnst.F_REF
-    elif rgdec_code == 1:
-        return (8 / 3) * cnst.F_REF
-    elif rgdec_code == 3:
-        return (20 / 9) * cnst.F_REF
-    elif rgdec_code == 4:
-        return (16 / 9) * cnst.F_REF
-    elif rgdec_code == 5:
-        return (3 / 2) * cnst.F_REF
-    elif rgdec_code == 6:
-        return (4 / 3) * cnst.F_REF
-    elif rgdec_code == 7:
-        return (2 / 3) * cnst.F_REF
-    elif rgdec_code == 8:
-        return (12 / 7) * cnst.F_REF
-    elif rgdec_code == 9:
-        return (5 / 4) * cnst.F_REF
-    elif rgdec_code == 10:
-        return (6 / 13) * cnst.F_REF
-    elif rgdec_code == 11:
-        return (16 / 11) * cnst.F_REF
-    else:
-        raise Exception(f"Invalid range decimation code {rgdec_code} supplied - valid codes are 0-11")
+    if isinstance(rgdec, int):
+        rgdec = RangeDecimation(rgdec)
+    return rgdec.sample_rate_hz
 
 
 def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -54,10 +71,10 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
         A pandas dataframe containing the decoded sub-commutated acilliary data words.
     """
     if df.index.nlevels > 1:
-        df = df.droplevel(cnst.BURST_NUM_FIELD_NAME)
+        df = df.droplevel(fn.f("ACQUISITION_CHUNK_NUM"))
 
-    index_col = cnst.SUBCOM_ANC_DATA_WORD_INDEX_FIELD_NAME
-    data_col = cnst.SUBCOM_ANC_DATA_WORD_FIELD_NAME
+    index_col = fn.f("SUBCOM_ANC_DATA_WORD_INDEX")
+    data_col = fn.f("SUBCOM_ANC_DATA_WORD")
     start_indices = df.index[df[index_col] == 1]
     output_dict_list = []
 
@@ -90,13 +107,13 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
                 pvt_t = pvt_t1 + pvt_t2 + pvt_t3 + pvt_t4
 
                 output_dictionary = {
-                    cnst.X_POS_FIELD_NAME: x,
-                    cnst.Y_POS_FIELD_NAME: y,
-                    cnst.Z_POS_FIELD_NAME: z,
-                    cnst.X_VEL_FIELD_NAME: x_vel,
-                    cnst.Y_VEL_FIELD_NAME: y_vel,
-                    cnst.Z_VEL_FIELD_NAME: z_vel,
-                    cnst.POD_SOLN_DATA_TIMESTAMP_FIELD_NAME: pvt_t,
+                    fn.f("X_POS"): x,
+                    fn.f("Y_POS"): y,
+                    fn.f("Z_POS"): z,
+                    fn.f("X_VEL"): x_vel,
+                    fn.f("Y_VEL"): y_vel,
+                    fn.f("Z_VEL"): z_vel,
+                    fn.f("POD_SOLN_DATA_TIMESTAMP"): pvt_t,
                 }
 
                 q0_bytes = struct.pack(">HH", d[22], d[23])
@@ -123,14 +140,14 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
 
                 output_dictionary.update(
                     {
-                        cnst.Q0_FIELD_NAME: q0,
-                        cnst.Q1_FIELD_NAME: q1,
-                        cnst.Q2_FIELD_NAME: q2,
-                        cnst.Q3_FIELD_NAME: q3,
-                        cnst.X_ANG_RATE_FIELD_NAME: x_ang_rate,
-                        cnst.Y_ANG_RATE_FIELD_NAME: y_ang_rate,
-                        cnst.Z_ANG_RATE_FIELD_NAME: z_ang_rate,
-                        cnst.ATTITUDE_DATA_TIMESTAMP_FIELD_NAME: att_t,
+                        fn.f("Q0"): q0,
+                        fn.f("Q1"): q1,
+                        fn.f("Q2"): q2,
+                        fn.f("Q3"): q3,
+                        fn.f("X_ANG_RATE"): x_ang_rate,
+                        fn.f("Y_ANG_RATE"): y_ang_rate,
+                        fn.f("Z_ANG_RATE"): z_ang_rate,
+                        fn.f("ATTITUDE_DATA_TIMESTAMP"): att_t,
                     }
                 )
 
