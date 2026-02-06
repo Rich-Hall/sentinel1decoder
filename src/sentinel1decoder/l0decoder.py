@@ -18,6 +18,13 @@ class Level0Decoder:
     """Decoder for Sentinel-1 Level 0 files."""
 
     def __init__(self, filename: str, log_level: int = logging.WARNING):
+        """Initialize the Level0Decoder.
+
+        Args:
+            filename: The filename of the Sentinel-1 Level 0 file to decode.
+            log_level: The logging level to use.
+        """
+
         # TODO: Better logging functionality
         logging.basicConfig(filename="output_log.log", level=log_level)
         logging.debug("Initialized logger")
@@ -26,6 +33,15 @@ class Level0Decoder:
         self._user_data_bounds: Optional[list[tuple[int, int]]] = None
 
     def decode_metadata(self, return_raw: bool = False) -> pd.DataFrame:
+        """Decode the metadata of each packet in a Sentinel-1 Level 0 file.
+
+        Sentinel-1 Space Packet format consists of a primary header of 6 bytes
+        followed by a packet data field. The first 62 bytes of the packet data
+        field are taken up by the packet secondary header.
+
+        Returns:
+            A Pandas Dataframe containing the decoded metadata.
+        """
         with open(self.filename, "rb") as f:
             data = f.read()
             columns, bounds = decode_packet_headers(data)
@@ -42,6 +58,15 @@ class Level0Decoder:
         return out_df
 
     def decode_packets(self, input_header: pd.DataFrame, batch_size: int = 256) -> np.ndarray:
+        """Decode the radar echoes from a given set of packets.
+
+        Args:
+            input_header: DataFrame of packets to decode.
+            batch_size: The number of packets to decode at once.
+
+        Returns:
+            An array of complex samples from the SAR instrument.
+        """
 
         packet_nums, num_quads, baq_mode = self._check_packets_are_valid_for_decoding(input_header)
 
@@ -139,6 +164,16 @@ class Level0Decoder:
         return (packet_nums_int_list, num_quads, baq_mode)
 
     def _add_acquisition_chunk_index(self, df: pd.DataFrame, *, use_raw_names: bool = False) -> pd.DataFrame:
+        """Add an acquisition chunk index to a dataframe of packets.
+
+        Args:
+            df: DataFrame of packets to add the acquisition chunk index to.
+            use_raw_names: Whether to use the raw or decoded names for the columns.
+
+        Returns:
+            A DataFrame with the acquisition chunk index added.
+        """
+
         if use_raw_names:
             sig, swath, nq, baq = (
                 fn.f("SIGNAL_TYPE", "raw"),

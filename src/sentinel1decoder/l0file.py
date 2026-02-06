@@ -13,6 +13,12 @@ class Level0File:
     "A Sentinel-1 Level 0 file contains several 'acquisition chunks', or azimuth blocks"
 
     def __init__(self, filename: str) -> None:
+        """Initialize the Level0File.
+
+        Args:
+            filename: The filename of the Sentinel-1 Level 0 file to read.
+        """
+
         self._filename = filename
         self._decoder = Level0Decoder(filename)
 
@@ -118,6 +124,12 @@ class Level0File:
         return self._acquisition_chunk_data_dict[acquisition_chunk]  # type: ignore
 
     def save_acquisition_chunk_data(self, acquisition_chunk: int) -> None:
+        """Save the radar echoes for a given acquisition chunk to a .npy file.
+
+        Args:
+            acquisition_chunk: The acquisition chunk to save the data for.
+        """
+
         save_file_name = self._generate_acquisition_chunk_cache_filename(acquisition_chunk)
         np.save(save_file_name, self.get_acquisition_chunk_data(acquisition_chunk))
 
@@ -125,4 +137,13 @@ class Level0File:
     # ----------------------- Private class functions ------------------------
     # ------------------------------------------------------------------------
     def _generate_acquisition_chunk_cache_filename(self, acquisition_chunk: int) -> str:
+        """Generate a filename for a cache file for a given acquisition chunk.
+
+        Args:
+            acquisition_chunk: The acquisition chunk to generate a cache filename for.
+
+        Returns:
+            A filename for a cache file for a given acquisition chunk.
+        """
+
         return os.path.splitext(self.filename)[0] + "_acquisition_chunk_" + str(acquisition_chunk) + ".npy"
