@@ -71,10 +71,10 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
         A pandas dataframe containing the decoded sub-commutated acilliary data words.
     """
     if df.index.nlevels > 1:
-        df = df.droplevel(fn.f("ACQUISITION_CHUNK_NUM"))
+        df = df.droplevel(fn.ACQUISITION_CHUNK_NUM_DECODED)
 
-    index_col = fn.f("SUBCOM_ANC_DATA_WORD_INDEX")
-    data_col = fn.f("SUBCOM_ANC_DATA_WORD")
+    index_col = fn.SUBCOM_ANC_DATA_WORD_INDEX_DECODED
+    data_col = fn.SUBCOM_ANC_DATA_WORD_DECODED
     start_indices = df.index[df[index_col] == 1]
     output_dict_list = []
 
@@ -107,13 +107,13 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
                 pvt_t = pvt_t1 + pvt_t2 + pvt_t3 + pvt_t4
 
                 output_dictionary = {
-                    fn.f("X_POS"): x,
-                    fn.f("Y_POS"): y,
-                    fn.f("Z_POS"): z,
-                    fn.f("X_VEL"): x_vel,
-                    fn.f("Y_VEL"): y_vel,
-                    fn.f("Z_VEL"): z_vel,
-                    fn.f("POD_SOLN_DATA_TIMESTAMP"): pvt_t,
+                    fn.X_POS_DECODED: x,
+                    fn.Y_POS_DECODED: y,
+                    fn.Z_POS_DECODED: z,
+                    fn.X_VEL_DECODED: x_vel,
+                    fn.Y_VEL_DECODED: y_vel,
+                    fn.Z_VEL_DECODED: z_vel,
+                    fn.POD_SOLN_DATA_TIMESTAMP_DECODED: pvt_t,
                 }
 
                 q0_bytes = struct.pack(">HH", d[22], d[23])
@@ -140,14 +140,14 @@ def read_subcommed_data(df: pd.DataFrame) -> pd.DataFrame:
 
                 output_dictionary.update(
                     {
-                        fn.f("Q0"): q0,
-                        fn.f("Q1"): q1,
-                        fn.f("Q2"): q2,
-                        fn.f("Q3"): q3,
-                        fn.f("X_ANG_RATE"): x_ang_rate,
-                        fn.f("Y_ANG_RATE"): y_ang_rate,
-                        fn.f("Z_ANG_RATE"): z_ang_rate,
-                        fn.f("ATTITUDE_DATA_TIMESTAMP"): att_t,
+                        fn.Q0_DECODED: q0,
+                        fn.Q1_DECODED: q1,
+                        fn.Q2_DECODED: q2,
+                        fn.Q3_DECODED: q3,
+                        fn.X_ANG_RATE_DECODED: x_ang_rate,
+                        fn.Y_ANG_RATE_DECODED: y_ang_rate,
+                        fn.Z_ANG_RATE_DECODED: z_ang_rate,
+                        fn.ATTITUDE_DATA_TIMESTAMP_DECODED: att_t,
                     }
                 )
 

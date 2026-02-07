@@ -1,5 +1,6 @@
 import os
-from typing import Dict, Optional, cast
+import warnings
+from typing import Any, Dict, Iterator, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -33,7 +34,7 @@ class Level0File:
 
         # Only decode radar echoes from acquisition chunks if that data is requested
         self._acquisition_chunk_data_dict: Dict[int, Optional[np.ndarray]] = dict.fromkeys(
-            self._packet_metadata.index.unique(level=fn.f("ACQUISITION_CHUNK_NUM")), None
+            self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED), None
         )
 
     @property
@@ -93,6 +94,60 @@ class Level0File:
         # packet_metadata is a multiindexed pd.DataFrame so using loc like this returns a pd.DataFrame too
         return cast(pd.DataFrame, self.packet_metadata.loc[acquisition_chunk])
 
+    @property
+    def acquisition_chunks(self) -> list[int]:
+        """List of acquisition chunk IDs in this file (0-indexed)."""
+        return list(
+            self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED)
+        )
+
+    def get_acquisition_chunk_constants(self, acquisition_chunk: int) -> Dict[str, Any]:
+        """Get the constant metadata values for an acquisition chunk.
+
+        Within a chunk, these fields are the same for every packet: signal_type,
+        swath_num, num_quads, baq_mode, swst, swl, pri, elevation_beam_address.
+
+        Args:
+            acquisition_chunk: The acquisition chunk ID (0-indexed).
+
+        Returns:
+            Dict with keys: signal_type, swath_num, num_quads, baq_mode, swst,
+            swl, pri, elevation_beam_address. Values are from the first packet
+            in the chunk.
+        """
+        meta = self.get_acquisition_chunk_metadata(acquisition_chunk)
+        row = meta.iloc[0]
+        return {
+            "signal_type": row[fn.SIGNAL_TYPE_DECODED],
+            "swath_num": row[fn.SWATH_NUM_DECODED],
+            "num_quads": row[fn.NUM_QUADS_DECODED],
+            "baq_mode": row[fn.BAQ_MODE_DECODED],
+            "swst": row[fn.SWST_DECODED],
+            "swl": row[fn.SWL_DECODED],
+            "pri": row[fn.PRI_DECODED],
+            "elevation_beam_address": row[fn.EBADR_DECODED],
+        }
+
+    def iter_chunks_matching(self, **kwargs: Any) -> Iterator[int]:
+        """Yield acquisition chunk IDs whose constants match all given criteria.
+
+        Args:
+            **kwargs: Field names and values to match. Keys must be among:
+                signal_type, swath_num, num_quads, baq_mode, swst, swl, pri,
+                elevation_beam_address.
+
+        Yields:
+            Chunk IDs that match all criteria.
+
+        Example:
+            >>> for chunk in l0.iter_chunks_matching(signal_type=SignalType.ECHO):
+            ...     process_echo_chunk(chunk)
+        """
+        for chunk_id in self.acquisition_chunks:
+            constants = self.get_acquisition_chunk_constants(chunk_id)
+            if all(constants.get(k) == v for k, v in kwargs.items()):
+                yield chunk_id
+
     def get_acquisition_chunk_data(self, acquisition_chunk: int, try_load_from_file: bool = True) -> np.ndarray:
         """
         Get an array of complex samples from the SAR instrument for a given acquisition chunk.
@@ -132,6 +187,37 @@ class Level0File:
 
         save_file_name = self._generate_acquisition_chunk_cache_filename(acquisition_chunk)
         np.save(save_file_name, self.get_acquisition_chunk_data(acquisition_chunk))
+
+    # ------------------------------------------------------------------------
+    # ----------------------- Deprecated aliases ------------------------------
+    # ------------------------------------------------------------------------
+
+    def get_burst_metadata(self, burst: int) -> pd.DataFrame:
+        """Deprecated. Use get_acquisition_chunk_metadata instead."""
+        warnings.warn(
+            "get_burst_metadata is deprecated and will be removed in a future version, use get_acquisition_chunk_metadata instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_acquisition_chunk_metadata(burst)
+
+    def get_burst_data(self, burst: int, try_load_from_file: bool = True) -> np.ndarray:
+        """Deprecated. Use get_acquisition_chunk_data instead."""
+        warnings.warn(
+            "get_burst_data is deprecated and will be removed in a future version, use get_acquisition_chunk_data instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_acquisition_chunk_data(burst, try_load_from_file=try_load_from_file)
+
+    def save_burst_data(self, burst: int) -> None:
+        """Deprecated. Use save_acquisition_chunk_data instead."""
+        warnings.warn(
+            "save_burst_data is deprecated and will be removed in a future versions, use save_acquisition_chunk_data instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.save_acquisition_chunk_data(burst)
 
     # ------------------------------------------------------------------------
     # ----------------------- Private class functions ------------------------

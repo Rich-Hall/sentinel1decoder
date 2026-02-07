@@ -13,24 +13,21 @@ from sentinel1decoder._sentinel1decoder import (
 )
 from sentinel1decoder.enums import BaqMode
 
+logger = logging.getLogger(__name__)
+
 
 class Level0Decoder:
     """Decoder for Sentinel-1 Level 0 files."""
 
-    def __init__(self, filename: str, log_level: int = logging.WARNING):
+    def __init__(self, filename: str) -> None:
         """Initialize the Level0Decoder.
 
         Args:
             filename: The filename of the Sentinel-1 Level 0 file to decode.
-            log_level: The logging level to use.
         """
-
-        # TODO: Better logging functionality
-        logging.basicConfig(filename="output_log.log", level=log_level)
-        logging.debug("Initialized logger")
-
         self.filename = filename
         self._user_data_bounds: Optional[list[tuple[int, int]]] = None
+        logger.debug("Initialized decoder for %s", filename)
 
     def decode_metadata(self, return_raw: bool = False) -> pd.DataFrame:
         """Decode the metadata of each packet in a Sentinel-1 Level 0 file.
@@ -42,11 +39,13 @@ class Level0Decoder:
         Returns:
             A Pandas Dataframe containing the decoded metadata.
         """
+        logger.debug("Decoding metadata from %s", self.filename)
         with open(self.filename, "rb") as f:
             data = f.read()
             columns, bounds = decode_packet_headers(data)
 
         self._user_data_bounds = bounds
+        logger.debug("Decoded metadata for %d packets", len(bounds))
 
         if return_raw:
             out_df = pd.DataFrame(columns)
@@ -69,6 +68,13 @@ class Level0Decoder:
         """
 
         packet_nums, num_quads, baq_mode = self._check_packets_are_valid_for_decoding(input_header)
+
+        logger.info(
+            "Decoding %d packets with BAQ mode %s, batch_size=%d",
+            len(packet_nums),
+            baq_mode.name,
+            batch_size,
+        )
 
         if baq_mode == BaqMode.BYPASS_MODE:
             batch_decoder = decode_batched_bypass_packets
@@ -105,6 +111,7 @@ class Level0Decoder:
                 decoded = batch_decoder(batch, num_quads)
                 output_data[output_idx : output_idx + len(decoded), :] = decoded
 
+        logger.debug("Decoded %d packets to shape %s", len(packet_nums), output_data.shape)
         return output_data
 
     def _check_packets_are_valid_for_decoding(self, packets: pd.DataFrame) -> tuple[list[int], int, BaqMode]:
@@ -122,7 +129,7 @@ class Level0Decoder:
             raise ValueError("No packets to check")
 
         # Check we have been given packet numbers
-        packet_num_name = fn.f("PACKET_NUM")
+        packet_num_name = fn.PACKET_NUM_DECODED
         if packet_num_name in (packets.index.names or []):
             packet_nums = np.asarray(packets.index.get_level_values(packet_num_name).unique())
         elif packet_num_name in packets.columns:
@@ -131,10 +138,10 @@ class Level0Decoder:
             raise ValueError("No PACKET_NUM column or index level found")
 
         # Check we have a single number of quads
-        if fn.f("NUM_QUADS") in packets.columns:
-            nq_col_name = fn.f("NUM_QUADS")
-        elif fn.f("NUM_QUADS", "raw") in packets.columns:
-            nq_col_name = fn.f("NUM_QUADS", "raw")
+        if fn.NUM_QUADS_DECODED in packets.columns:
+            nq_col_name = fn.NUM_QUADS_DECODED
+        elif fn.NUM_QUADS_RAW in packets.columns:
+            nq_col_name = fn.NUM_QUADS_RAW
         else:
             raise ValueError("No NUM_QUADS column found")
         unique_num_quads = packets[nq_col_name].unique()
@@ -142,10 +149,10 @@ class Level0Decoder:
             raise ValueError("Multiple num_quads values found")
 
         # Check we have a single BAQ mode
-        if fn.f("BAQ_MODE") in packets.columns:
-            baq_mode_col_name = fn.f("BAQ_MODE")
-        elif fn.f("BAQ_MODE", "raw") in packets.columns:
-            baq_mode_col_name = fn.f("BAQ_MODE", "raw")
+        if fn.BAQ_MODE_DECODED in packets.columns:
+            baq_mode_col_name = fn.BAQ_MODE_DECODED
+        elif fn.BAQ_MODE_RAW in packets.columns:
+            baq_mode_col_name = fn.BAQ_MODE_RAW
         else:
             raise ValueError("No BAQ mode column found")
         unique_baq_modes = packets[baq_mode_col_name].unique()
@@ -176,17 +183,17 @@ class Level0Decoder:
 
         if use_raw_names:
             sig, swath, nq, baq = (
-                fn.f("SIGNAL_TYPE", "raw"),
-                fn.f("SWATH_NUM", "raw"),
-                fn.f("NUM_QUADS", "raw"),
-                fn.f("BAQ_MODE", "raw"),
+                fn.SIGNAL_TYPE_RAW,
+                fn.SWATH_NUM_RAW,
+                fn.NUM_QUADS_RAW,
+                fn.BAQ_MODE_RAW,
             )
-            swst, swl, pri = fn.f("SWST", "raw"), fn.f("SWL", "raw"), fn.f("PRI", "raw")
-            prict, abadr, ebadr = fn.f("PRI_COUNT", "raw"), fn.f("ABADR", "raw"), fn.f("EBADR", "raw")
+            swst, swl, pri = fn.SWST_RAW, fn.SWL_RAW, fn.PRI_RAW
+            prict, abadr, ebadr = fn.PRI_COUNT_RAW, fn.ABADR_RAW, fn.EBADR_RAW
         else:
-            sig, swath, nq, baq = fn.f("SIGNAL_TYPE"), fn.f("SWATH_NUM"), fn.f("NUM_QUADS"), fn.f("BAQ_MODE")
-            swst, swl, pri = fn.f("SWST"), fn.f("SWL"), fn.f("PRI")
-            prict, abadr, ebadr = fn.f("PRI_COUNT"), fn.f("ABADR"), fn.f("EBADR")
+            sig, swath, nq, baq = fn.SIGNAL_TYPE_DECODED, fn.SWATH_NUM_DECODED, fn.NUM_QUADS_DECODED, fn.BAQ_MODE_DECODED
+            swst, swl, pri = fn.SWST_DECODED, fn.SWL_DECODED, fn.PRI_DECODED
+            prict, abadr, ebadr = fn.PRI_COUNT_DECODED, fn.ABADR_DECODED, fn.EBADR_DECODED
 
         prev = df.shift(1)
 
@@ -222,6 +229,6 @@ class Level0Decoder:
         result = df.copy()
         result.index = pd.MultiIndex.from_arrays(
             [chunk_id.to_numpy(), packet_num],
-            names=[fn.f("ACQUISITION_CHUNK_NUM"), fn.f("PACKET_NUM")],
+            names=[fn.ACQUISITION_CHUNK_NUM_DECODED, fn.PACKET_NUM_DECODED],
         )
         return result

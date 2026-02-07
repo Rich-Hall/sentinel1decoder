@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 
+from sentinel1decoder import _field_names as fn
 from sentinel1decoder._metadata_parser import parse_raw_metadata_columns
 from sentinel1decoder._sentinel1decoder import decode_packet_headers
 
@@ -19,6 +20,30 @@ def _decode_single_packet(packet_bytes: bytes) -> pd.DataFrame:
     return parse_raw_metadata_columns(columns)
 
 
+# ---- Rust / Python field name sync ----
+
+
+def test_rust_output_keys_handled_by_python() -> None:
+    """Every key Rust decode_packet_headers outputs must be in RAW_TO_DECODED_NAME.
+
+    This ensures the two sources of truth (Rust lib.rs into_pydict, Python _field_names.py)
+    stay in sync. If Rust adds a new field or changes a key, this test fails until Python
+    is updated.
+    """
+    config = PacketConfig(num_quads=1, baq_mode=0)
+    packet = create_synthetic_level0_packet(config, 0)
+    columns, _ = decode_packet_headers(packet)
+
+    rust_keys = set(columns.keys())
+    python_handled = set(fn.RAW_TO_DECODED_NAME.keys())
+
+    unhandled = rust_keys - python_handled
+    assert not unhandled, (
+        f"Rust outputs {len(unhandled)} key(s) not in Python RAW_TO_DECODED_NAME: {unhandled}. "
+        "Add raw->decoded mapping in _field_names.py."
+    )
+
+
 # ---- Primary header: format and values ----
 
 
@@ -27,7 +52,7 @@ def test_decode_primary_header_too_few_bytes() -> None:
     data = b"\xff"
     columns, bounds = decode_packet_headers(data)
     assert len(bounds) == 0
-    assert len(columns["packet_ver_num"]) == 0
+    assert len(columns[fn.PACKET_VER_NUM_RAW]) == 0
 
 
 def test_decode_primary_header_values() -> None:
@@ -46,15 +71,15 @@ def test_decode_primary_header_values() -> None:
     packet = create_synthetic_level0_packet(config, 0)
     df = _decode_single_packet(packet)
 
-    assert df["packet_ver_num"].iloc[0] == 0
-    assert df["packet_type"].iloc[0] == 0
-    assert df["secondary_header"].iloc[0] == 1
-    assert df["pid"].iloc[0] == 65
-    assert df["pcat"].iloc[0] == 12
-    assert df["sequence_flags"].iloc[0] == 3
-    assert df["packet_sequence_count"].iloc[0] == 0
+    assert df[fn.PACKET_VER_NUM_DECODED].iloc[0] == 0
+    assert df[fn.PACKET_TYPE_DECODED].iloc[0] == 0
+    assert df[fn.SECONDARY_HEADER_DECODED].iloc[0] == 1
+    assert df[fn.PID_DECODED].iloc[0] == 65
+    assert df[fn.PCAT_DECODED].iloc[0] == 12
+    assert df[fn.SEQUENCE_FLAGS_DECODED].iloc[0] == 3
+    assert df[fn.PACKET_SEQUENCE_COUNT_DECODED].iloc[0] == 0
     # First packet has secondary header: packet data field = 62 (secondary) + 8 (bypass payload)
-    assert df["packet_data_len"].iloc[0] == 62 + 8
+    assert df[fn.PACKET_DATA_LEN_DECODED].iloc[0] == 62 + 8
 
     config2 = PacketConfig(
         packet_version=2,
@@ -68,15 +93,15 @@ def test_decode_primary_header_values() -> None:
     packet2 = create_synthetic_level0_packet(config2, 0, include_secondary=False)
     df2 = _decode_single_packet(packet2)
 
-    assert df2["packet_ver_num"].iloc[0] == 2
-    assert df2["packet_type"].iloc[0] == 1
-    assert df2["secondary_header"].iloc[0] == 0
-    assert df2["pid"].iloc[0] == 85
-    assert df2["pcat"].iloc[0] == 0
-    assert df2["sequence_flags"].iloc[0] == 1
-    assert df2["packet_sequence_count"].iloc[0] == 100
+    assert df2[fn.PACKET_VER_NUM_DECODED].iloc[0] == 2
+    assert df2[fn.PACKET_TYPE_DECODED].iloc[0] == 1
+    assert df2[fn.SECONDARY_HEADER_DECODED].iloc[0] == 0
+    assert df2[fn.PID_DECODED].iloc[0] == 85
+    assert df2[fn.PCAT_DECODED].iloc[0] == 0
+    assert df2[fn.SEQUENCE_FLAGS_DECODED].iloc[0] == 1
+    assert df2[fn.PACKET_SEQUENCE_COUNT_DECODED].iloc[0] == 100
     # Second packet has no secondary header; 62 bytes of user data only (no secondary bytes)
-    assert df2["packet_data_len"].iloc[0] == 62
+    assert df2[fn.PACKET_DATA_LEN_DECODED].iloc[0] == 62
 
 
 def test_primary_header_from_bits_directly() -> None:
@@ -99,14 +124,14 @@ def test_primary_header_from_bits_directly() -> None:
     columns, bounds = decode_packet_headers(packet)
 
     assert len(bounds) == 1
-    assert columns["packet_ver_num"][0] == 0
-    assert columns["packet_type"][0] == 0
-    assert columns["secondary_header"][0] == 1
-    assert columns["pid"][0] == 65
-    assert columns["pcat"][0] == 12
-    assert columns["sequence_flags"][0] == 3
-    assert columns["packet_sequence_count"][0] == 16380
-    assert columns["packet_data_len"][0] == 65533
+    assert columns[fn.PACKET_VER_NUM_RAW][0] == 0
+    assert columns[fn.PACKET_TYPE_RAW][0] == 0
+    assert columns[fn.SECONDARY_HEADER_RAW][0] == 1
+    assert columns[fn.PID_RAW][0] == 65
+    assert columns[fn.PCAT_RAW][0] == 12
+    assert columns[fn.SEQUENCE_FLAGS_RAW][0] == 3
+    assert columns[fn.PACKET_SEQUENCE_COUNT_RAW][0] == 16380
+    assert columns[fn.PACKET_DATA_LEN_RAW][0] == 65533
 
 
 # ---- Secondary header: raw and decoded ----
