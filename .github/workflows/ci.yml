@@ -86,7 +86,7 @@ jobs:
       run: gunzip -c sentinel1-dev.tar.gz | docker load
 
     - name: Run Pre-commit Checks in Docker
-      run: docker run --rm sentinel1-dev pre-commit run --all-files --show-diff-on-failure
+      run: docker run --rm -v ${{ github.workspace }}:/app -w /app sentinel1-dev pre-commit run --all-files --show-diff-on-failure
 
   run-tests:
     needs: build-container
