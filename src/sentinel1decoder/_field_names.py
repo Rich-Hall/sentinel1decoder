@@ -206,6 +206,4 @@ _RAW_DECODED_PAIRS: list[tuple[str, str]] = [
 ]
 
 RAW_TO_DECODED_NAME: dict[str, str] = {raw: decoded for raw, decoded in _RAW_DECODED_PAIRS}
-DECODED_TO_RAW_NAME: dict[str, str] = {
-    decoded: raw for raw, decoded in RAW_TO_DECODED_NAME.items()
-}
+DECODED_TO_RAW_NAME: dict[str, str] = {decoded: raw for raw, decoded in RAW_TO_DECODED_NAME.items()}

@@ -16,7 +16,7 @@ fi
 extract_base_stage() {
     local file=$1
     # Extract from "FROM python" until the first non-base-stage command (COPY, RUN pip install, etc.)
-    awk '/^FROM python.*as base/,/^(COPY|RUN pip install|# Final stage|# Devcontainer-specific)/ { 
+    awk '/^FROM python.*as base/,/^(COPY|RUN pip install|# Final stage|# Devcontainer-specific)/ {
         if (/^(COPY|RUN pip install|# Final stage|# Devcontainer-specific)/ && !/^FROM/) {
             exit
         }

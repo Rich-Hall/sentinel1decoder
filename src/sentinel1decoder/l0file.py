@@ -99,9 +99,7 @@ class Level0File:
     @property
     def acquisition_chunks(self) -> list[int]:
         """List of acquisition chunk IDs in this file (0-indexed)."""
-        return list(
-            self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED)
-        )
+        return list(self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED))
 
     def get_acquisition_chunk_constants(self, acquisition_chunk: int) -> dict[str, Any]:
         """Get the constant metadata values for an acquisition chunk.
@@ -198,7 +196,8 @@ class Level0File:
     def get_burst_metadata(self, burst: int) -> pd.DataFrame:
         """Deprecated. Use get_acquisition_chunk_metadata instead."""
         warnings.warn(
-            "get_burst_metadata is deprecated and will be removed in a future version, use get_acquisition_chunk_metadata instead.",
+            "get_burst_metadata is deprecated and will be removed in a future version, "
+            "use get_acquisition_chunk_metadata instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -207,7 +206,8 @@ class Level0File:
     def get_burst_data(self, burst: int, try_load_from_file: bool = True) -> np.ndarray:
         """Deprecated. Use get_acquisition_chunk_data instead."""
         warnings.warn(
-            "get_burst_data is deprecated and will be removed in a future version, use get_acquisition_chunk_data instead.",
+            "get_burst_data is deprecated and will be removed in a future version, "
+            "use get_acquisition_chunk_data instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -216,7 +216,8 @@ class Level0File:
     def save_burst_data(self, burst: int) -> None:
         """Deprecated. Use save_acquisition_chunk_data instead."""
         warnings.warn(
-            "save_burst_data is deprecated and will be removed in a future version, use save_acquisition_chunk_data instead.",
+            "save_burst_data is deprecated and will be removed in a future version, "
+            "use save_acquisition_chunk_data instead.",
             DeprecationWarning,
             stacklevel=2,
         )

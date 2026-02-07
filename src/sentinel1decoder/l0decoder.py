@@ -193,7 +193,12 @@ class Level0Decoder:
             swst, swl, pri = fn.SWST_RAW, fn.SWL_RAW, fn.PRI_RAW
             prict, abadr, ebadr = fn.PRI_COUNT_RAW, fn.ABADR_RAW, fn.EBADR_RAW
         else:
-            sig, swath, nq, baq = fn.SIGNAL_TYPE_DECODED, fn.SWATH_NUM_DECODED, fn.NUM_QUADS_DECODED, fn.BAQ_MODE_DECODED
+            sig, swath, nq, baq = (
+                fn.SIGNAL_TYPE_DECODED,
+                fn.SWATH_NUM_DECODED,
+                fn.NUM_QUADS_DECODED,
+                fn.BAQ_MODE_DECODED,
+            )
             swst, swl, pri = fn.SWST_DECODED, fn.SWL_DECODED, fn.PRI_DECODED
             prict, abadr, ebadr = fn.PRI_COUNT_DECODED, fn.ABADR_DECODED, fn.EBADR_DECODED
 

@@ -4,11 +4,11 @@
 		"dockerfile": "Dockerfile",
 		"context": ".."
 	},
-	
+
 	// Mount the workspace folder
 	"workspaceFolder": "/app",
 	"workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
-	
+
 	// Port forwarding for Jupyter and other services
 	"forwardPorts": [8888, 8000],
 	"portsAttributes": {
@@ -21,7 +21,7 @@
 			"onAutoForward": "ignore"
 		}
 	},
-	
+
 	// VS Code/Cursor extensions to install
 	"customizations": {
 		"vscode": {
@@ -60,16 +60,16 @@
 			}
 		}
 	},
-	
+
 	// Commands to run after container is created
 	"postCreateCommand": "VIRTUAL_ENV=/opt/venv maturin develop",
-	
+
 	// Commands to run when attaching to container
 	"postAttachCommand": "echo 'Dev container ready! Rust extension built with maturin.'",
-	
+
 	// Use the same user as host (optional, can help with file permissions)
 	"remoteUser": "root",
-	
+
 	// Features (optional, can add more tools if needed)
 	"features": {}
 }

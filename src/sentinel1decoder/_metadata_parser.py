@@ -101,9 +101,7 @@ def parse_raw_metadata_columns(columns: dict[str, Any]) -> pd.DataFrame:
     # ---------------------------------------------------------
     # Sub-commutated ancillary data service
     # ---------------------------------------------------------
-    columns[fn.SUBCOM_ANC_DATA_WORD_INDEX_RAW] = pd.array(
-        columns[fn.SUBCOM_ANC_DATA_WORD_INDEX_RAW], dtype="UInt8"
-    )
+    columns[fn.SUBCOM_ANC_DATA_WORD_INDEX_RAW] = pd.array(columns[fn.SUBCOM_ANC_DATA_WORD_INDEX_RAW], dtype="UInt8")
     columns[fn.SUBCOM_ANC_DATA_WORD_RAW] = pd.array(columns[fn.SUBCOM_ANC_DATA_WORD_RAW], dtype="UInt16")
 
     # ---------------------------------------------------------
@@ -120,9 +118,7 @@ def parse_raw_metadata_columns(columns: dict[str, Any]) -> pd.DataFrame:
     columns[fn.RANGE_DEC_RAW] = _enum_column(columns[fn.RANGE_DEC_RAW], RangeDecimation)
     columns[fn.RX_GAIN_RAW] = _to_float_arr(columns[fn.RX_GAIN_RAW]) * -0.5
     columns[fn.TX_RAMP_RATE_RAW] = _txprr(columns[fn.TX_RAMP_RATE_RAW])
-    columns[fn.TX_PULSE_START_FREQ_RAW] = _txpsf(
-        columns[fn.TX_PULSE_START_FREQ_RAW], columns[fn.TX_RAMP_RATE_RAW]
-    )
+    columns[fn.TX_PULSE_START_FREQ_RAW] = _txpsf(columns[fn.TX_PULSE_START_FREQ_RAW], columns[fn.TX_RAMP_RATE_RAW])
     columns[fn.TX_PULSE_LEN_RAW] = _to_float_arr(columns[fn.TX_PULSE_LEN_RAW]) / cnst.F_REF
     columns[fn.RANK_RAW] = pd.array(columns[fn.RANK_RAW], dtype="UInt8")
     columns[fn.PRI_RAW] = _to_float_arr(columns[fn.PRI_RAW]) / cnst.F_REF
