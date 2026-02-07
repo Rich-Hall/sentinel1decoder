@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import struct
 from dataclasses import dataclass
 from math import ceil
-from typing import List, Union
+from typing import Union
 
 
 @dataclass
@@ -96,7 +98,7 @@ def signed_int_to_ten_bit_unsigned(value: int) -> int:
     return magnitude
 
 
-def pack_bits(bit_strings: List[str], pack_to_16_bits: bool = False) -> bytes:
+def pack_bits(bit_strings: list[str], pack_to_16_bits: bool = False) -> bytes:
     """Pack a list of binary strings into bytes."""
     all_bits = "".join(bit_strings)
     if pack_to_16_bits:
@@ -111,7 +113,7 @@ def pack_bits(bit_strings: List[str], pack_to_16_bits: bool = False) -> bytes:
     return bytes(result)
 
 
-def pack_10bit_samples(samples: List[int]) -> bytes:
+def pack_10bit_samples(samples: list[int]) -> bytes:
     """Pack 10-bit samples into bytes.
     Creates a continuous bit stream where each sample occupies 10 bits.
     Multiple samples are packed together without gaps.
@@ -288,12 +290,20 @@ def create_synthetic_bypass_data(config: PacketConfig, const_value: int = 0) -> 
 def create_synthetic_level0_packet(
     config: PacketConfig,
     const_value: Union[int, str] = 0,
+    *,
+    include_secondary: bool = True,
 ) -> bytes:
     """Create synthetic level 0 packet bytes.
 
-    A level0 packet consists of a primary header, a secondary header, and a data section.
-    The data section may contain 10-bit bypass data or compressed FDBAQ data.
+    A level0 packet consists of a primary header, an optional secondary header,
+    and an optional data section. When include_secondary is False (for testing
+    packets without a secondary header), the packet data field is 62 zero bytes.
+    When True, the packet has a secondary header and a data section (bypass or
+    FDBAQ). Use num_quads=1 and baq_mode=0 for a minimal payload when only
+    header decoding is needed.
     """
+    if not include_secondary:
+        return create_primary_header(config, 62) + b"\x00" * 62
 
     if config.baq_mode == 0 and isinstance(const_value, int):
         data_section = create_synthetic_bypass_data(config, const_value)
@@ -302,8 +312,9 @@ def create_synthetic_level0_packet(
     else:
         raise ValueError(f"Unsupported BAQ mode: {config.baq_mode} with const_value: {const_value}")
 
-    data_length = len(data_section)
-    primary_header = create_primary_header(config, data_length)
+    # Packet data field = secondary header (62) + user data
+    packet_data_len = 62 + len(data_section)
+    primary_header = create_primary_header(config, packet_data_len)
     secondary_header = create_secondary_header(config)
 
     return primary_header + secondary_header + data_section

@@ -7,6 +7,20 @@ on:
     branches: [ main ]
 
 jobs:
+  check-dockerfile-sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check Dockerfile sync
+      run: |
+        if [ -f scripts/check_dockerfile_sync.sh ]; then
+          chmod +x scripts/check_dockerfile_sync.sh
+          ./scripts/check_dockerfile_sync.sh
+        else
+          echo "Warning: sync check script not found"
+        fi
+
   build-and-verify-installability:
     runs-on: ubuntu-22.04
     strategy:

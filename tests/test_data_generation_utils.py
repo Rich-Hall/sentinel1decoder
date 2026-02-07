@@ -229,6 +229,15 @@ def test_create_synthetic_bypass_data() -> None:
     assert data == expected
 
 
+def test_create_synthetic_level0_packet_no_secondary() -> None:
+    """Packet with include_secondary=False has no secondary header (62 zero bytes)."""
+    config = PacketConfig(secondary_header_flag=0)
+    packet = create_synthetic_level0_packet(config, 0, include_secondary=False)
+    assert len(packet) == 6 + 62
+    assert packet[:6] == create_primary_header(config, 62)
+    assert packet[6:] == b"\x00" * 62
+
+
 def test_create_synthetic_level0_packet_bypass() -> None:
 
     # Data contains four sets of 128 10-bit samples, each set padded to 16-bit word boundaries

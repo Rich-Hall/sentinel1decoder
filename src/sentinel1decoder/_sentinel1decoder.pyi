@@ -1,6 +1,6 @@
 """Type stubs for sentinel1decoder Rust extension module."""
 
-from typing import List
+from typing import Any, List
 
 import numpy as np
 
@@ -80,5 +80,23 @@ def decode_batched_bypass_packets(
     Returns:
         A NumPy array of complex64 with shape (num_packets, num_quads * 2). Each row contains
         the decoded samples for one packet, interleaved as IE+QE*j, IO+QO*j, ...
+    """
+    ...
+
+def decode_packet_headers(
+    data: bytes,
+) -> tuple[dict[str, Any], list[tuple[int, int]]]:
+    """Decode packet headers from Sentinel-1 packets.
+
+    This function decodes the packet headers from Sentinel-1 packets.
+
+    Args:
+        data: Raw bytes containing the packet headers
+
+    Returns:
+        A tuple containing a dictionary of packet header fields and a list of user data bounds.
+            The dictionary contains the packet header fields as keys and the values as values. The keys are the field names as defined in the _field_names module.
+            It is intended to be used to create a pandas DataFrame with the packet header fields.
+        A list of user data bounds containing the start and end indices of the user data for each packet.
     """
     ...
