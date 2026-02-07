@@ -32,10 +32,6 @@ htmlcov/
 .tox/
 .nox/
 
-# Git
-.git/
-.gitignore
-
 # Documentation builds
 docs/_build/
 site/
