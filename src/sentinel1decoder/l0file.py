@@ -170,8 +170,9 @@ class Level0File:
                 save_file_name = self._generate_acquisition_chunk_cache_filename(acquisition_chunk)
                 try:
                     self._acquisition_chunk_data_dict[acquisition_chunk] = np.load(save_file_name)
-                finally:
-                    return self.get_acquisition_chunk_data(acquisition_chunk, try_load_from_file=False)
+                except (OSError, FileNotFoundError, ValueError):
+                    pass
+                return self.get_acquisition_chunk_data(acquisition_chunk, try_load_from_file=False)
             else:
                 acquisition_chunk_header = self._packet_metadata.loc[[acquisition_chunk]]
                 self._acquisition_chunk_data_dict[acquisition_chunk] = self._decoder.decode_packets(
@@ -215,7 +216,7 @@ class Level0File:
     def save_burst_data(self, burst: int) -> None:
         """Deprecated. Use save_acquisition_chunk_data instead."""
         warnings.warn(
-            "save_burst_data is deprecated and will be removed in a future versions, use save_acquisition_chunk_data instead.",
+            "save_burst_data is deprecated and will be removed in a future version, use save_acquisition_chunk_data instead.",
             DeprecationWarning,
             stacklevel=2,
         )

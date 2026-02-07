@@ -4,7 +4,7 @@ import pytest
 import sentinel1decoder.constants as cnst
 from sentinel1decoder.utilities import (
     range_dec_to_sample_rate,
-    rename_packet_metadata_columns_to_decoded,
+    rename_packet_metadata_columns_to_parsed,
     rename_packet_metadata_columns_to_raw,
 )
 
@@ -33,7 +33,7 @@ def test_range_dec_to_sample_rate() -> None:
 
 
 def test_rename_packet_metadata_columns_to_raw() -> None:
-    """Rename decoded columns to raw; no-op when already raw."""
+    """Rename parsed columns to raw; no-op when already raw."""
     df_decoded = pd.DataFrame({"ECC Number": [1], "BAQ Mode": [12]})
     df_raw = rename_packet_metadata_columns_to_raw(df_decoded)
     assert "ECC" in df_raw.columns
@@ -46,14 +46,14 @@ def test_rename_packet_metadata_columns_to_raw() -> None:
     assert list(df_raw2.columns) == ["ECC", "BAQMOD"]
 
 
-def test_rename_packet_metadata_columns_to_decoded() -> None:
-    """Rename raw columns to decoded; no-op when already decoded."""
+def test_rename_packet_metadata_columns_to_parsed() -> None:
+    """Rename raw columns to parsed; no-op when already parsed."""
     df_raw = pd.DataFrame({"ECC": [1], "BAQMOD": [12]})
-    df_decoded = rename_packet_metadata_columns_to_decoded(df_raw)
+    df_decoded = rename_packet_metadata_columns_to_parsed(df_raw)
     assert "ECC Number" in df_decoded.columns
     assert "BAQ Mode" in df_decoded.columns
     assert "ECC" not in df_decoded.columns
 
     # No-op when already decoded
-    df_decoded2 = rename_packet_metadata_columns_to_decoded(df_decoded)
+    df_decoded2 = rename_packet_metadata_columns_to_parsed(df_decoded)
     assert df_decoded2 is df_decoded

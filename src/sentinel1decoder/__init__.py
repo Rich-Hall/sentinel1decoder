@@ -18,7 +18,7 @@ from .enums import (
 from .l0decoder import Level0Decoder
 from .l0file import Level0File
 
-__version__ = "1.1.1"
+__version__ = "2.0.0"
 
 __all__ = [
     # Decoders

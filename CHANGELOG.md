@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-07
+
+### Acquisition Chunks
+- **Acquisition chunk API**: New terminology replaces "burst" with "acquisition chunk", avoiding confusion with ESA's slightly different meaning for the term "burst" and reflecting a more precise grouping of packets (constant signal type, swath, quads, BAQ mode, SWST, SWL, PRI, PRI count increments, azimuth beam, elevation beam).
+- Acquisition chunks are calculated with slightly stricter requirements than bursts, fixing an issue where bursts were invalid for decoding due to multiple data types.
+- New methods: `get_acquisition_chunk_metadata`, `get_acquisition_chunk_constants`, `get_acquisition_chunk_data`, `save_acquisition_chunk_data`, `iter_chunks_matching`.
+
+### Packet Metadata
+- **Header data** is now decoded in rust for better performance.
+- We now fully parse header data fields, and make available a separate method for producing the "raw" data containing pure ints. Several new enums have been added to support this.
+- New **helper methods** on Level0File for iterating over acquisition chunks with particular qualities use these enums.
+
+### Deprecated
+- `get_burst_metadata`, `get_burst_data`, `save_burst_data` — use the acquisition-chunk equivalents. These will be removed in a future version but are included for backward compatibility.
+
+### Documentation
+- New `docs/` structure with API reference (classes, utilities, enums, constants).
+- ESA spec links (SentiWiki, S-1A/B and S-1C/D SAR Space Packet specs).
+- Simplified README with quick start and link to full documentation.
+
 ## [1.1.1] - 2026-01-03
 - Fixed an issue where the version number shown by `pip show` did not match `sentinel1decoder.__version__`
 
@@ -69,9 +89,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Additional decoder implementations
-- Enhanced error handling
-- Extended documentation
+- BAQ mode C (3/4/5-bit) decoding
+- Full sub-commutated data decoding
 
+[2.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v2.0.0
+[1.1.1]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.0.0

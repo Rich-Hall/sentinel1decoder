@@ -9,13 +9,14 @@ from sentinel1decoder.enums import RangeDecimation
 
 
 def rename_packet_metadata_columns_to_raw(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename decoded column names to raw (spec-style) names.
+    """Rename parsed column names to raw (spec-style) names.
 
     Only renames columns that are present and have a raw counterpart.
     No-op if DataFrame already has raw names; returns input unchanged.
+    Does not convert any column data types, only renames the columns.
 
     Args:
-        df: DataFrame with decoded or mixed column names.
+        df: DataFrame with parsed or mixed column names.
 
     Returns:
         DataFrame with raw column names where applicable.
@@ -26,17 +27,18 @@ def rename_packet_metadata_columns_to_raw(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=rename_map)
 
 
-def rename_packet_metadata_columns_to_decoded(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename raw (spec-style) column names to human-readable decoded names.
+def rename_packet_metadata_columns_to_parsed(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename raw (spec-style) column names to human-readable parsed names.
 
-    Only renames columns that are present and have a decoded counterpart.
-    No-op if DataFrame already has decoded names; returns input unchanged.
+    Only renames columns that are present and have a parsed counterpart.
+    No-op if DataFrame already has parsed names; returns input unchanged.
+    Does not convert any column data types, only renames the columns.
 
     Args:
         df: DataFrame with raw or mixed column names.
 
     Returns:
-        DataFrame with decoded column names where applicable.
+        DataFrame with parsed column names where applicable.
     """
     rename_map = {old: new for old, new in fn.RAW_TO_DECODED_NAME.items() if old in df.columns}
     if not rename_map:
