@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import struct
 from dataclasses import dataclass
 from math import ceil
-from typing import List, Union
+from typing import Union
 
 
 @dataclass
@@ -96,7 +98,7 @@ def signed_int_to_ten_bit_unsigned(value: int) -> int:
     return magnitude
 
 
-def pack_bits(bit_strings: List[str], pack_to_16_bits: bool = False) -> bytes:
+def pack_bits(bit_strings: list[str], pack_to_16_bits: bool = False) -> bytes:
     """Pack a list of binary strings into bytes."""
     all_bits = "".join(bit_strings)
     if pack_to_16_bits:
@@ -111,7 +113,7 @@ def pack_bits(bit_strings: List[str], pack_to_16_bits: bool = False) -> bytes:
     return bytes(result)
 
 
-def pack_10bit_samples(samples: List[int]) -> bytes:
+def pack_10bit_samples(samples: list[int]) -> bytes:
     """Pack 10-bit samples into bytes.
     Creates a continuous bit stream where each sample occupies 10 bits.
     Multiple samples are packed together without gaps.

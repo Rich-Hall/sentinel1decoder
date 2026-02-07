@@ -4,7 +4,7 @@ This module defines raw (spec-style) and decoded (human-readable) column names
 as constants, with derived mappings for renaming DataFrames.
 """
 
-from typing import Dict, List, Tuple
+from __future__ import annotations
 
 # -----------------------------------------------------------------------------
 # Packet metadata dataframe indices (not part of headers)
@@ -154,7 +154,7 @@ ATTITUDE_DATA_TIMESTAMP_DECODED = "Attitude Data Timestamp"
 # -----------------------------------------------------------------------------
 # Raw <-> decoded mappings for all header fields (used for DataFrame rename)
 # -----------------------------------------------------------------------------
-_RAW_DECODED_PAIRS: List[Tuple[str, str]] = [
+_RAW_DECODED_PAIRS: list[tuple[str, str]] = [
     # Primary header (Rust snake_case -> decoded)
     (PACKET_VER_NUM_RAW, PACKET_VER_NUM_DECODED),
     (PACKET_TYPE_RAW, PACKET_TYPE_DECODED),
@@ -205,7 +205,7 @@ _RAW_DECODED_PAIRS: List[Tuple[str, str]] = [
     (NUM_QUADS_RAW, NUM_QUADS_DECODED),
 ]
 
-RAW_TO_DECODED_NAME: Dict[str, str] = {raw: decoded for raw, decoded in _RAW_DECODED_PAIRS}
-DECODED_TO_RAW_NAME: Dict[str, str] = {
+RAW_TO_DECODED_NAME: dict[str, str] = {raw: decoded for raw, decoded in _RAW_DECODED_PAIRS}
+DECODED_TO_RAW_NAME: dict[str, str] = {
     decoded: raw for raw, decoded in RAW_TO_DECODED_NAME.items()
 }

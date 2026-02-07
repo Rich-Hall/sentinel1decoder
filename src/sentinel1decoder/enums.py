@@ -4,6 +4,8 @@ Values are sourced from the SAR Space Protocol Data Unit specification
 (S1-IF-ASD-PL-0007, Issue 13, 22.06.2015).
 """
 
+from __future__ import annotations
+
 from enum import Enum
 
 from sentinel1decoder import constants as cnst

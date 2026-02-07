@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, cast
+from typing import Any, Iterator, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -33,7 +35,7 @@ class Level0File:
         self._ephemeris: Optional[pd.DataFrame] = None
 
         # Only decode radar echoes from acquisition chunks if that data is requested
-        self._acquisition_chunk_data_dict: Dict[int, Optional[np.ndarray]] = dict.fromkeys(
+        self._acquisition_chunk_data_dict: dict[int, Optional[np.ndarray]] = dict.fromkeys(
             self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED), None
         )
 
@@ -101,7 +103,7 @@ class Level0File:
             self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED)
         )
 
-    def get_acquisition_chunk_constants(self, acquisition_chunk: int) -> Dict[str, Any]:
+    def get_acquisition_chunk_constants(self, acquisition_chunk: int) -> dict[str, Any]:
         """Get the constant metadata values for an acquisition chunk.
 
         Within a chunk, these fields are the same for every packet: signal_type,
