@@ -35,36 +35,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Final stage for CI/root Dockerfile - includes source code and package installation
 FROM base
 
-# Copy dependency files first for better layer caching
-# This layer will be cached if dependencies don't change
-COPY pyproject.toml rust/Cargo.toml rust/Cargo.lock* ./
-COPY rust/Cargo.toml rust/
-
-# Install Python dependencies (without package, for caching)
-# We'll install the package itself after copying source code
-RUN pip install --no-cache-dir \
-    "maturin>=1.4.0" \
-    "numpy>=1.24" \
-    pandas \
-    pytest \
-    pytest-cov \
-    pre-commit \
-    "black==24.2" \
-    "flake8==7.0" \
-    autoflake \
-    "isort==5.13.2" \
-    "mypy==1.8.0" \
-    jupyter \
-    jupyterlab \
-    ipywidgets \
-    scipy \
-    matplotlib \
-    pandas-stubs
-
-# Copy the rest of the project files
+# Copy project files
 COPY . .
 
-# Install the package in editable mode (this will skip already-installed dependencies)
+# Install Python dependencies and the package in editable mode
 RUN pip install --no-cache-dir -e ".[dev]"
 
 # Create an improved entrypoint script that conditionally rebuilds Rust extension
