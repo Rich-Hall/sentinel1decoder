@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/sentinel1decoder.svg)](https://badge.fury.io/py/sentinel1decoder)
 [![PyPI](https://img.shields.io/pypi/v/sentinel1decoder)](https://pypi.org/project/sentinel1decoder/)
+[![Documentation](https://readthedocs.org/projects/sentinel1decoder/badge/?version=latest)](https://sentinel1decoder.readthedocs.io)
 
 A Python decoder for Sentinel-1 Level 0 files. The Level 0 format consists of the raw space packets downlinked from the Sentinel-1 spacecraft. This package decodes these packets and produces the raw I/Q sensor output from the SAR instrument, which can then be further processed to focus a SAR image.
 
@@ -10,6 +11,10 @@ An example Jupyter notebook demonstrating the process of decoding Level 0 data a
 This code is based on an implementation in C by jmfriedt, which can be found [here](https://github.com/jmfriedt/sentinel1_level0).
 
 The core decoding functions are implemented in Rust and run multithreaded, so I/Q extraction is quite fast.
+
+## Documentation
+
+**[Full documentation](https://sentinel1decoder.readthedocs.io)** — API reference, ESA spec links, and usage details.
 
 ## Installation
 
@@ -29,10 +34,6 @@ l0file.packet_metadata   # packet metadata
 l0file.ephemeris        # satellite ephemeris
 iq_data = l0file.get_acquisition_chunk_data(0)  # decode I/Q for acquisition chunk 0
 ```
-
-## Documentation
-
-See the [documentation](docs/) for full API reference, ESA spec links, and usage details.
 
 ## Resources
 
