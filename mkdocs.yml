@@ -1,0 +1,22 @@
+site_name: sentinel1decoder
+site_description: A Python decoder for Sentinel-1 Level 0 files
+site_url: https://github.com/Rich-Hall/sentinel1decoder
+repo_url: https://github.com/Rich-Hall/sentinel1decoder
+repo_name: Rich-Hall/sentinel1decoder
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - API Reference:
+    - Classes: api/classes.md
+    - Utilities: api/utilities.md
+    - Enums: api/enums.md
+    - Constants: api/constants.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - attr_list
