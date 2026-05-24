@@ -6,9 +6,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-def extract_IW_chunk_info(inputfile, visualize=True):
-
+def extract_IW_chunk_info(
+        inputfile: str, 
+        visualize: bool = True
+    ) -> tuple["Level0File", dict[str, list]]:
+    """
+    Extract the data block information of the Sentinel-1 IW mode  
+    Important Note:
+    When visualize=True, the function will output logs using logger.info.
+    Please configure logging before calling the function
+    """
     l0file = Level0File(inputfile)
     packet_metadata = l0file.packet_metadata
     chunk_ids = sorted(packet_metadata.index.get_level_values(_field_names.ACQUISITION_CHUNK_NUM_DECODED).unique())
@@ -66,18 +73,18 @@ def extract_IW_chunk_info(inputfile, visualize=True):
 
 
     if visualize:
-        logger.info("noise chunks:", result['noise'])
-        logger.info("skipped_chunks:", result['skipped_chunks'])
-        logger.info("rx_cal_chunks:", result['rx_cal_chunks'])
-        logger.info("tx_cal_chunks:", result['tx_cal_chunks'])
-        logger.info("epdn_cal_chunks:", result['epdn_cal_chunks'])
-        logger.info("apdn_cal_chunks:", result['apdn_cal_chunks'])
-        logger.info("ta_or_txiso_cal_chunks:", result['ta_or_txiso_cal_chunks'])
-        logger.info("tx_cal_iso_chunks:", result['tx_cal_iso_chunks'])
+        logger.info(f"noise chunks: {result['noise']}")
+        logger.info(f"skipped_chunks: {result['skipped_chunks']}")
+        logger.info(f"rx_cal_chunks: {result['rx_cal_chunks']}")
+        logger.info(f"tx_cal_chunks: {result['tx_cal_chunks']}")
+        logger.info(f"epdn_cal_chunks: {result['epdn_cal_chunks']}")
+        logger.info(f"apdn_cal_chunks: {result['apdn_cal_chunks']}")
+        logger.info(f"ta_or_txiso_cal_chunks: {result['ta_or_txiso_cal_chunks']}")
+        logger.info(f"tx_cal_iso_chunks: {result['tx_cal_iso_chunks']}")
         logger.info(f"This product has {count} chunks, {count_valid} of which are valid image chunks")
-        logger.info(f"{colored('IW1 chunks', 'blue')}:", result['IW1'])
-        logger.info(f"{colored('IW2 chunks', 'blue')}:", result['IW2'])
-        logger.info(f"{colored('IW3 chunks', 'blue')}:", result['IW3'])
+        logger.info(f"{colored('IW1 chunks', 'blue')}: {result['IW1']}")
+        logger.info(f"{colored('IW2 chunks', 'blue')}: {result['IW2']}")
+        logger.info(f"{colored('IW3 chunks', 'blue')}: {result['IW3']}")
     
     return l0file, result
 
