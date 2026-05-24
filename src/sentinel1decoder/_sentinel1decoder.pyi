@@ -4,6 +4,20 @@ from typing import Any, List
 
 import numpy as np
 
+def decode_single_baq_packet(
+    data: bytes,
+    num_quads: int,
+    baq_bits: int,
+) -> np.ndarray:
+    ...
+
+def decode_batched_baq_packets(
+    packets: List[bytes],
+    num_quads: int,
+    baq_bits: int,
+) -> np.ndarray:
+    ...
+
 def decode_single_fdbaq_packet(
     data: bytes,
     num_quads: int,

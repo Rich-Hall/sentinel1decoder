@@ -10,6 +10,7 @@ from sentinel1decoder import _field_names as fn
 from sentinel1decoder._metadata_parser import parse_raw_metadata_columns
 from sentinel1decoder._sentinel1decoder import (
     decode_batched_bypass_packets,
+    decode_batched_baq_packets,
     decode_batched_fdbaq_packets,
     decode_packet_headers,
 )
@@ -81,7 +82,8 @@ class Level0Decoder:
         if baq_mode == BaqMode.BYPASS_MODE:
             batch_decoder = decode_batched_bypass_packets
         elif baq_mode in (BaqMode.BAQ_3_BIT_MODE, BaqMode.BAQ_4_BIT_MODE, BaqMode.BAQ_5_BIT_MODE):
-            raise NotImplementedError("Data format C not implemented")
+            bits = {BaqMode.BAQ_3_BIT_MODE: 3, BaqMode.BAQ_4_BIT_MODE: 4, BaqMode.BAQ_5_BIT_MODE: 5}[baq_mode]
+            batch_decoder = lambda b, nq: decode_batched_baq_packets(b, nq, bits)
         elif baq_mode in (BaqMode.FDBAQ_MODE_0, BaqMode.FDBAQ_MODE_1, BaqMode.FDBAQ_MODE_2):
             batch_decoder = decode_batched_fdbaq_packets
         else:

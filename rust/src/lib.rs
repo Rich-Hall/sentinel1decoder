@@ -19,6 +19,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList};
 
 mod bypass_decoder;
+mod baq_decoder;
 mod fdbaq_decoder;
 mod headers;
 mod huffman;
@@ -29,6 +30,7 @@ mod sample_value_reconstruction;
 use crate::bypass_decoder::{
     decode_batched_bypass_packets_inner, decode_single_bypass_packet_inner,
 };
+use crate::baq_decoder::{decode_batched_baq_packets_inner, decode_single_baq_packet_inner};
 use crate::fdbaq_decoder::{decode_batched_fdbaq_packets_inner, decode_single_fdbaq_packet_inner};
 use crate::headers::{decode_packet_headers_inner, PacketHeaderColumns};
 
@@ -96,6 +98,31 @@ where
     }
 
     Ok(output.into())
+}
+
+#[pyfunction]
+fn decode_single_baq_packet(
+    data: &[u8],
+    num_quads: usize,
+    baq_bits: usize,
+    py: Python,
+) -> PyResult<Py<PyAny>> {
+    let complex_samples = decode_single_baq_packet_inner(data, num_quads, baq_bits as u8)
+        .map_err(|e| PyValueError::new_err(e))?;
+
+    Ok(complex_samples.into_pyarray(py).to_owned().into())
+}
+
+#[pyfunction]
+fn decode_batched_baq_packets(
+    packets: &Bound<'_, PyList>,
+    num_quads: usize,
+    baq_bits: usize,
+    py: Python,
+) -> PyResult<Py<PyAny>> {
+    decode_batched_packets_helper(packets, num_quads, py, |packet_data, nq| {
+        decode_batched_baq_packets_inner(packet_data, nq, baq_bits as u8)
+    })
 }
 
 #[pyfunction]
@@ -274,6 +301,8 @@ fn decode_packet_headers(data: &[u8], py: Python) -> PyResult<Py<PyAny>> {
 /// all the functions and types exposed to Python.
 #[pymodule]
 fn _sentinel1decoder(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(decode_single_baq_packet, m)?)?;
+    m.add_function(wrap_pyfunction!(decode_batched_baq_packets, m)?)?;
     m.add_function(wrap_pyfunction!(decode_single_fdbaq_packet, m)?)?;
     m.add_function(wrap_pyfunction!(decode_batched_fdbaq_packets, m)?)?;
     m.add_function(wrap_pyfunction!(decode_single_bypass_packet, m)?)?;
