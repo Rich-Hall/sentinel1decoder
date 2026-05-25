@@ -120,10 +120,27 @@ fn decode_channel(
         // to handle this case gracefully.
         let boundary_state_bits: u32;
         let boundary_state_len: u8;
-        if let Some(&byte) = data.get(*byte_idx) {
-            boundary_state_bits = (state.state_bits as u32) << 8 | byte as u32;
-            boundary_state_len = state.state_len + 8;
-            *byte_idx += 1;
+
+        // Determine how many bits we strictly need to read the header for this block.
+        // - BRC needs 3 bits
+        // - THIDX needs 8 bits
+        // - Other channels (IO, QO) need 0 bits (no header)
+        let bits_needed_for_header = if read_brc { 3 } else if read_thidx { 8 } else { 0 };
+
+        // CRITICAL FIX: Only fetch a new byte from `data` if the leftover bits in `state` are  
+        // strictly insufficient for the header. If we unconditionally fetch a byte here (especially  
+        // on the last block of a channel), we might consume a byte that actually belongs to the NEXT  
+        // channel. Since `state`is discarded at the end of `decode_channel`, that over-read byte 
+        // would be lost forever, causing the next channel to lose its synchronization.
+        if state.state_len < bits_needed_for_header {
+            if let Some(&byte) = data.get(*byte_idx) {
+                boundary_state_bits = (state.state_bits as u32) << 8 | byte as u32;
+                boundary_state_len = state.state_len + 8;
+                *byte_idx += 1;
+            } else {
+                boundary_state_bits = state.state_bits as u32;
+                boundary_state_len = state.state_len;
+            }
         } else {
             boundary_state_bits = state.state_bits as u32;
             boundary_state_len = state.state_len;
@@ -175,10 +192,10 @@ fn decode_channel(
         // Decode remaining symbols for this block
         while block_symbols.len() < symbols_needed {
             if *byte_idx >= data.len() {
-                return Err("Unexpected end of data when decoding symbols".to_string());
+                return Err("Unexpected end of data when decoding symbols (1)".to_string());
             }
             let byte = *data.get(*byte_idx)
-                .ok_or_else(|| "Unexpected end of data when decoding symbols".to_string())?;
+                .ok_or_else(|| "Unexpected end of data when decoding symbols (2)".to_string())?;
             *byte_idx += 1;
 
             let state_id = state.to_state_id();
