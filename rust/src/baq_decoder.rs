@@ -5,7 +5,7 @@
 
 use rayon::prelude::*;
 use num_complex::Complex32;
-use crate::sample_value_reconstruction::reconstruct_unsigned_sample_value;
+use crate::sample_value_reconstruction::reconstruct_unsigned_sample_value_baq;
 
 
 /// Extract an integer of the given width from a bitstream at a bit offset.
@@ -52,17 +52,6 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
     let qe_data = &data[ie_len + io_len..ie_len + io_len + qe_len];
     let qo_data = &data[ie_len + io_len + qe_len..];
 
-    // Mapping between BAQ bit-width and BRC value
-    // BAQ 3-bit -> BRC 0
-    // BAQ 4-bit -> BRC 2
-    // BAQ 5-bit -> BRC 4
-    let brc = match baq_bits {
-        3 => 0,
-        4 => 2,
-        5 => 4,
-        _ => return Err(format!("Unsupported BAQ mode: {}", baq_bits)),
-    };
-
     let mut out = Vec::with_capacity(num_quads * 2);
 
     for block_idx in 0..num_baq_blocks {
@@ -82,14 +71,14 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
             let ie_bits = extract_bits(ie_data, bit_offset_normal, baq_bits as usize);
             let ie_sign = (ie_bits >> (baq_bits - 1)) & 1 == 1;
             let ie_mcode = ie_bits & ((1 << (baq_bits - 1)) - 1);
-            let ie_mag = reconstruct_unsigned_sample_value(ie_mcode, brc, thidx);
+            let ie_mag = reconstruct_unsigned_sample_value_baq(ie_mcode, baq_bits, thidx);
             let ie_val = if ie_sign { -ie_mag } else { ie_mag };
 
             // Decode IO
             let io_bits = extract_bits(io_data, bit_offset_normal, baq_bits as usize);
             let io_sign = (io_bits >> (baq_bits - 1)) & 1 == 1;
             let io_mcode = io_bits & ((1 << (baq_bits - 1)) - 1);
-            let io_mag = reconstruct_unsigned_sample_value(io_mcode, brc, thidx);
+            let io_mag = reconstruct_unsigned_sample_value_baq(io_mcode, baq_bits, thidx);
             let io_val = if io_sign { -io_mag } else { io_mag };
 
             // Decode QE
@@ -98,14 +87,14 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
             let qe_bits = extract_bits(qe_data, qe_bit_offset, baq_bits as usize);
             let qe_sign = (qe_bits >> (baq_bits - 1)) & 1 == 1;
             let qe_mcode = qe_bits & ((1 << (baq_bits - 1)) - 1);
-            let qe_mag = reconstruct_unsigned_sample_value(qe_mcode, brc, thidx);
+            let qe_mag = reconstruct_unsigned_sample_value_baq(qe_mcode, baq_bits, thidx);
             let qe_val = if qe_sign { -qe_mag } else { qe_mag };
 
             // Decode QO
             let qo_bits = extract_bits(qo_data, bit_offset_normal, baq_bits as usize);
             let qo_sign = (qo_bits >> (baq_bits - 1)) & 1 == 1;
             let qo_mcode = qo_bits & ((1 << (baq_bits - 1)) - 1);
-            let qo_mag = reconstruct_unsigned_sample_value(qo_mcode, brc, thidx);
+            let qo_mag = reconstruct_unsigned_sample_value_baq(qo_mcode, baq_bits, thidx);
             let qo_val = if qo_sign { -qo_mag } else { qo_mag };
 
             out.push(Complex32::new(ie_val, qe_val));

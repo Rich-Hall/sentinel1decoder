@@ -135,6 +135,57 @@ pub fn reconstruct_unsigned_sample_value(mcode: u8, brc: u8, thidx: u8) -> f32 {
 }
 
 #[inline(always)]
+pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8) -> f32 {
+    match baq_bits {
+        3 => {
+            if mcode >= 4 {
+                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+            }
+            if thidx <= 3 {
+                if mcode < 3 {
+                    mcode as f32
+                } else {
+                    A3[thidx as usize]
+                }
+            } else {
+                NRL_A3[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        4 => {
+            if mcode >= 8 {
+                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+            }
+            if thidx <= 5 {
+                if mcode < 7 {
+                    mcode as f32
+                } else {
+                    A4[thidx as usize]
+                }
+            } else {
+                NRL_A4[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        5 => {
+            if mcode >= 16 {
+                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+            }
+            if thidx <= 10 {
+                if mcode < 15 {
+                    mcode as f32
+                } else {
+                    A5[thidx as usize]
+                }
+            } else {
+                NRL_A5[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        _ => {
+            unhandled_reconstruction_case(mcode, baq_bits, thidx);
+        }
+    }
+}
+
+#[inline(always)]
 pub fn reconstruct_channel(data: &[(bool, u8)], brcs: &[u8], thidxs: &[u8]) -> Vec<f32> {
     if brcs.len() != thidxs.len() {
         panic!("Mismatched lengths of BRC and THIDX arrays");
