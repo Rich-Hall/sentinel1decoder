@@ -17,6 +17,7 @@ from .enums import (
 )
 from .l0decoder import Level0Decoder
 from .l0file import Level0File
+from .chunks_info import extract_SM_chunk_info, extract_IW_chunk_info
 
 __version__ = "2.0.0"
 
