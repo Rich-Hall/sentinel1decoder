@@ -11,10 +11,6 @@ from sentinel1decoder import _field_names as fn
 from sentinel1decoder.l0decoder import Level0Decoder
 from sentinel1decoder.utilities import read_subcommed_data
 
-from termcolor import colored
-import logging
-
-logger = logging.getLogger(__name__)
 
 class Level0File:
     "A Sentinel-1 Level 0 file contains several 'acquisition chunks', or azimuth blocks"
@@ -42,9 +38,7 @@ class Level0File:
         self._acquisition_chunk_data_dict: dict[int, Optional[np.ndarray]] = dict.fromkeys(
             self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED), None
         )
-        
-        version_text = "lzl_Fork_v2.0.0"
-        logger.info(f"The current decoder version in use is {colored(version_text, 'yellow')}")
+
 
     @property
     def filename(self) -> str:
