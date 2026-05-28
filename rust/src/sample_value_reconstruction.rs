@@ -45,6 +45,12 @@ fn unhandled_reconstruction_case( mcode: u8, brc: u8, thidx: u8) -> ! {
     panic!("Unhandled reconstruction case: mcode={}, brc={}, thidx={}", mcode, brc, thidx);
 }
 
+#[cold]
+#[inline(never)]
+fn unhandled_reconstruction_case_baq( mcode: u8, baq_bits: u8, thidx: u8) -> ! {
+    panic!("Unhandled reconstruction case: mcode={}, baq_bits={}, thidx={}", mcode, baq_bits, thidx);
+}
+
 #[inline(always)]
 pub fn reconstruct_unsigned_sample_value(mcode: u8, brc: u8, thidx: u8) -> f32 {
     match brc {
@@ -139,7 +145,7 @@ pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8)
     match baq_bits {
         3 => {
             if mcode >= 4 {
-                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
             }
             if thidx <= 3 {
                 if mcode < 3 {
@@ -153,7 +159,7 @@ pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8)
         }
         4 => {
             if mcode >= 8 {
-                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
             }
             if thidx <= 5 {
                 if mcode < 7 {
@@ -167,7 +173,7 @@ pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8)
         }
         5 => {
             if mcode >= 16 {
-                unhandled_reconstruction_case(mcode, baq_bits, thidx);
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
             }
             if thidx <= 10 {
                 if mcode < 15 {
@@ -180,7 +186,7 @@ pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8)
             }
         }
         _ => {
-            unhandled_reconstruction_case(mcode, baq_bits, thidx);
+            unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
         }
     }
 }
