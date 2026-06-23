@@ -9,6 +9,23 @@ def decode_single_baq_packet(
     num_quads: int,
     baq_bits: int,
 ) -> np.ndarray:
+    """Decode BAQ (Block Adaptive Quantization) data from Sentinel-1 packets.
+
+    BAQ mode encodes samples with 3, 4, or 5 bits per sample, using THIDX threshold
+    index values stored in the QE channel for each 128-quad block to reconstruct
+    sample magnitudes.
+
+    Args:
+        data: Raw bytes containing the encoded data
+        num_quads: Number of quad samples to decode
+        baq_bits: Number of bits per sample (3, 4, or 5)
+
+    Returns:
+        A NumPy array of complex64 representing the decoded samples. The samples are interleaved:
+        - complex(IE[0], QE[0]), complex(IO[0], QO[0]), complex(IE[1], QE[1]), complex(IO[1], QO[1]), ...
+
+        The array has shape (num_quads * 2,) and dtype complex64.
+    """
     ...
 
 def decode_batched_baq_packets(
@@ -16,6 +33,19 @@ def decode_batched_baq_packets(
     num_quads: int,
     baq_bits: int,
 ) -> np.ndarray:
+    """Decode multiple BAQ packets in parallel.
+
+    This function decodes multiple BAQ-encoded packets using multithreading for improved performance.
+
+    Args:
+        packets: List of raw bytes, each containing encoded data for one packet
+        num_quads: Number of quad samples to decode per packet
+        baq_bits: Number of bits per sample (3, 4, or 5)
+
+    Returns:
+        A NumPy array of complex64 with shape (num_packets, num_quads * 2). Each row contains
+        the decoded samples for one packet, interleaved as IE+QE*j, IO+QO*j, ...
+    """
     ...
 
 def decode_single_fdbaq_packet(

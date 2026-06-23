@@ -30,6 +30,22 @@ fn extract_bits(data: &[u8], bit_offset: usize, num_bits: usize) -> u8 {
     }
 }
 
+/// Decode BAQ (Block Adaptive Quantization) data from Sentinel-1 packets.
+///
+/// BAQ mode encodes samples with 3, 4, or 5 bits per sample. The data is arranged
+/// into IE, IO, QE, QO channels, with THIDX threshold index bytes embedded in the
+/// QE channel at the start of each 128-quad block.
+///
+/// # Arguments
+///
+/// * `data` - Raw bytes containing the encoded data
+/// * `num_quads` - Number of quad samples to decode
+/// * `baq_bits` - Number of bits per sample (3, 4, or 5)
+///
+/// # Returns
+///
+/// A vector of complex numbers representing the decoded samples. The samples are interleaved:
+/// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
 pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u8) -> Result<Vec<Complex32>, String> {
     // Number of BAQ blocks (128 quads per block)
     let num_baq_blocks = (num_quads + 127) / 128;

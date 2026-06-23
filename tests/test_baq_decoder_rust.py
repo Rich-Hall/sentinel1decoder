@@ -14,6 +14,7 @@ BLOCK_QUADS = 128
 
 
 def _encode_baq_sample(value: int, baq_bits: int) -> str:
+    """Encode a signed integer sample into a BAQ bit string."""
     max_magnitude = (1 << (baq_bits - 1)) - 1
     if not -max_magnitude <= value <= max_magnitude:
         raise ValueError(f"value {value} is out of range for {baq_bits}-bit BAQ")
@@ -24,6 +25,7 @@ def _encode_baq_sample(value: int, baq_bits: int) -> str:
 
 
 def _pack_baq_channel(values: list[int], baq_bits: int) -> bytes:
+    """Pack a list of BAQ-encoded sample values into bytes for one channel."""
     return pack_bits([_encode_baq_sample(value, baq_bits) for value in values], pack_to_16_bits=True)
 
 
@@ -35,6 +37,7 @@ def _build_baq_packet(
     baq_bits: int,
     thidx_values: list[int],
 ) -> bytes:
+    """Build a complete BAQ packet from IE/IO/QE/QO channel values and THIDX."""
     num_quads = len(ie_values)
     num_blocks = (num_quads + BLOCK_QUADS - 1) // BLOCK_QUADS
 
@@ -65,6 +68,7 @@ def _expected_samples(
     qe_values: list[int],
     qo_values: list[int],
 ) -> np.ndarray:
+    """Build expected decoded complex samples from channel values (THIDX=0)."""
     expected = np.empty(len(ie_values) * 2, dtype=np.complex64)
     expected[0::2] = np.asarray(ie_values, dtype=np.float32) + 1j * np.asarray(qe_values, dtype=np.float32)
     expected[1::2] = np.asarray(io_values, dtype=np.float32) + 1j * np.asarray(qo_values, dtype=np.float32)
@@ -72,6 +76,7 @@ def _expected_samples(
 
 
 def _assert_decoded_packet(decoded: np.ndarray, expected: np.ndarray, num_quads: int) -> None:
+    """Assert decoded packet has correct dtype, shape, and values."""
     assert decoded.dtype == np.complex64
     assert decoded.shape == (num_quads * 2,)
     np.testing.assert_allclose(decoded, expected, rtol=1e-6, atol=1e-6)
@@ -86,6 +91,7 @@ _NRL_A4 = [0.129, 0.39, 0.6601, 0.9471, 1.2623, 1.6261, 2.0793, 2.7467]
 
 
 def _reconstruct_unsigned_sample_value_baq(mcode: int, baq_bits: int, thidx: int) -> float:
+    """Reconstruct floating-point magnitude from BAQ mcode, bit width, and THIDX."""
     if baq_bits == 3:
         if mcode >= 4:
             raise ValueError(f"mcode {mcode} is out of range for {baq_bits}-bit BAQ")
@@ -118,6 +124,7 @@ def _expected_reconstructed_samples(
     baq_bits: int,
     thidx_values: list[int],
 ) -> np.ndarray:
+    """Build expected decoded samples with full THIDX-based magnitude reconstruction."""
     expected = np.empty(len(ie_values) * 2, dtype=np.complex64)
 
     for block_idx, thidx in enumerate(thidx_values):
@@ -155,6 +162,7 @@ def _expected_reconstructed_samples(
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
 def test_single_baq_packet_roundtrip(baq_bits: int) -> None:
+    """Test BAQ roundtrip: encode then decode a single packet with THIDX=0."""
     num_quads = 256
 
     ie_values = [1] * 128 + [2] * 128
@@ -172,6 +180,7 @@ def test_single_baq_packet_roundtrip(baq_bits: int) -> None:
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
 def test_batched_baq_packets_match_single(baq_bits: int) -> None:
+    """Test batched BAQ decode matches single-packet decode."""
     num_quads = 256
 
     packet_specs = [
@@ -210,6 +219,7 @@ def test_batched_baq_packets_match_single(baq_bits: int) -> None:
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
 def test_single_baq_packet_with_nonezero_thidx(baq_bits: int) -> None:
+    """Test BAQ decoding with nonzero THIDX threshold indices."""
     num_quads = 256
     thidx_values = [5,5]
 
@@ -235,6 +245,7 @@ def test_single_baq_packet_with_nonezero_thidx(baq_bits: int) -> None:
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
 def test_single_baq_packet_with_partial_final_block(baq_bits: int) -> None:
+    """Test BAQ decoding with a partial final block (129 quads)."""
     num_quads = 129
     thidx_values = [0, 0]
 
@@ -253,6 +264,7 @@ def test_single_baq_packet_with_partial_final_block(baq_bits: int) -> None:
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
 def test_single_baq_packet_short_packet_raises_value_error(baq_bits: int) -> None:
+    """Test that short data raises ValueError."""
     num_quads = 256
 
     ie_values = [1] * 128 + [2] * 128
