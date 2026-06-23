@@ -16,8 +16,6 @@ from sentinel1decoder._sentinel1decoder import (
 )
 from sentinel1decoder.enums import BaqMode
 
-from termcolor import colored
-
 logger = logging.getLogger(__name__)
 
 
@@ -77,7 +75,7 @@ class Level0Decoder:
         logger.info(
             "Decoding %d packets with BAQ mode %s, batch_size=%d",
             len(packet_nums),
-            colored(baq_mode.name, 'green'),
+            baq_mode.name,
             batch_size,
         )
 
