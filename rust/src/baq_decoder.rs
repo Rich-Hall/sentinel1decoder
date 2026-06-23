@@ -30,6 +30,19 @@ fn extract_bits(data: &[u8], bit_offset: usize, num_bits: usize) -> u8 {
     }
 }
 
+/// Decode a single BAQ sample from a channel's bitstream.
+///
+/// Extracts `baq_bits` bits at the given offset, splits sign and magnitude,
+/// and reconstructs the signed floating-point value using the threshold index.
+#[inline(always)]
+fn decode_baq_sample(data: &[u8], bit_offset: usize, baq_bits: u8, thidx: u8) -> f32 {
+    let bits = extract_bits(data, bit_offset, baq_bits as usize);
+    let sign = (bits >> (baq_bits - 1)) & 1 == 1;
+    let mcode = bits & ((1 << (baq_bits - 1)) - 1);
+    let mag = reconstruct_unsigned_sample_value_baq(mcode, baq_bits, thidx);
+    if sign { -mag } else { mag }
+}
+
 /// Decode BAQ (Block Adaptive Quantization) data from Sentinel-1 packets.
 ///
 /// BAQ mode encodes samples with 3, 4, or 5 bits per sample. The data is arranged
@@ -83,35 +96,19 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
             let quad_idx = block_start_quad + q;
             let bit_offset_normal = quad_idx * baq_bits as usize;
 
-            // Decode IE 
-            let ie_bits = extract_bits(ie_data, bit_offset_normal, baq_bits as usize);
-            let ie_sign = (ie_bits >> (baq_bits - 1)) & 1 == 1;
-            let ie_mcode = ie_bits & ((1 << (baq_bits - 1)) - 1);
-            let ie_mag = reconstruct_unsigned_sample_value_baq(ie_mcode, baq_bits, thidx);
-            let ie_val = if ie_sign { -ie_mag } else { ie_mag };
+            // Decode IE
+            let ie_val = decode_baq_sample(ie_data, bit_offset_normal, baq_bits, thidx);
 
             // Decode IO
-            let io_bits = extract_bits(io_data, bit_offset_normal, baq_bits as usize);
-            let io_sign = (io_bits >> (baq_bits - 1)) & 1 == 1;
-            let io_mcode = io_bits & ((1 << (baq_bits - 1)) - 1);
-            let io_mag = reconstruct_unsigned_sample_value_baq(io_mcode, baq_bits, thidx);
-            let io_val = if io_sign { -io_mag } else { io_mag };
+            let io_val = decode_baq_sample(io_data, bit_offset_normal, baq_bits, thidx);
 
             // Decode QE
             // QE samples are preceded by THIDX bytes for each block, so adjust offset
             let qe_bit_offset = bit_offset_normal + (block_idx + 1) * 8;
-            let qe_bits = extract_bits(qe_data, qe_bit_offset, baq_bits as usize);
-            let qe_sign = (qe_bits >> (baq_bits - 1)) & 1 == 1;
-            let qe_mcode = qe_bits & ((1 << (baq_bits - 1)) - 1);
-            let qe_mag = reconstruct_unsigned_sample_value_baq(qe_mcode, baq_bits, thidx);
-            let qe_val = if qe_sign { -qe_mag } else { qe_mag };
+            let qe_val = decode_baq_sample(qe_data, qe_bit_offset, baq_bits, thidx);
 
             // Decode QO
-            let qo_bits = extract_bits(qo_data, bit_offset_normal, baq_bits as usize);
-            let qo_sign = (qo_bits >> (baq_bits - 1)) & 1 == 1;
-            let qo_mcode = qo_bits & ((1 << (baq_bits - 1)) - 1);
-            let qo_mag = reconstruct_unsigned_sample_value_baq(qo_mcode, baq_bits, thidx);
-            let qo_val = if qo_sign { -qo_mag } else { qo_mag };
+            let qo_val = decode_baq_sample(qo_data, bit_offset_normal, baq_bits, thidx);
 
             out.push(Complex32::new(ie_val, qe_val));
             out.push(Complex32::new(io_val, qo_val));

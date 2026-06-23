@@ -40,7 +40,6 @@ class Level0File:
             self._packet_metadata.index.unique(level=fn.ACQUISITION_CHUNK_NUM_DECODED), None
         )
 
-
     @property
     def filename(self) -> str:
         """
