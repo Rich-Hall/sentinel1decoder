@@ -90,7 +90,7 @@ def _assert_decoded_packet(decoded: np.ndarray, expected: np.ndarray, num_quads:
     np.testing.assert_allclose(decoded, expected, rtol=1e-6, atol=1e-6)
 
 
-_SIGMA_FACTORS = [0, 0, 0, 0, 0, 3.13] # sigma factors for THIDX values 5
+_SIGMA_FACTORS = [0, 0, 0, 0, 0, 3.13]  # sigma factors for THIDX values 5
 _A4 = [0, 0, 0, 0, 0, 7.76]
 _A5 = [0, 0, 0, 0, 0, 15.0, 0, 0, 0, 0, 0]
 _NRL_A3 = [0.2490, 0.7681, 1.3655, 2.1864]
@@ -229,14 +229,14 @@ def test_batched_baq_packets_match_single(baq_bits: int) -> None:
 def test_single_baq_packet_with_nonzero_thidx(baq_bits: int) -> None:
     """Test BAQ decoding with nonzero THIDX threshold indices."""
     num_quads = 256
-    thidx_values = [5,5]
+    thidx_values = [5, 5]
 
     if baq_bits == 3:
-        block_pattern = [0, -1, -2, -3] * 32 # thidx 5 > 3
+        block_pattern = [0, -1, -2, -3] * 32  # thidx 5 > 3
     elif baq_bits == 4:
-        block_pattern = [0, 1, 2, 3, 4, 5, 6, 7] * 16 # thidx 5 = 5
+        block_pattern = [0, 1, 2, 3, 4, 5, 6, 7] * 16  # thidx 5 = 5
     else:
-        block_pattern = list(range(16)) * 8 # thidx 5 < 10
+        block_pattern = list(range(16)) * 8  # thidx 5 < 10
 
     ie_values = block_pattern + block_pattern
     io_values = [-value for value in block_pattern] + [-value for value in block_pattern]
@@ -297,9 +297,7 @@ def test_single_baq_packet_short_packet_raises_value_error(baq_bits: int) -> Non
         "4-bit simple reconstruction (high mcode)",
     ],
 )
-def test_baq_single_packet_spec_example(
-    example_index: int, baq_spec_examples: list[BAQSpecExample]
-) -> None:
+def test_baq_single_packet_spec_example(example_index: int, baq_spec_examples: list[BAQSpecExample]) -> None:
     """Test BAQ decoder against spec examples from conftest."""
     example = baq_spec_examples[example_index]
 
@@ -315,9 +313,7 @@ def test_baq_single_packet_spec_example(
         thidx_values=[example.thidx],
     )
 
-    decoded = decode_single_baq_packet(
-        data, num_quads=1, baq_bits=example.baq_bits
-    )
+    decoded = decode_single_baq_packet(data, num_quads=1, baq_bits=example.baq_bits)
 
     expected = np.array(
         [
