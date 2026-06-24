@@ -10,7 +10,6 @@ from sentinel1decoder._sentinel1decoder import (
 from tests.conftest import BAQSpecExample
 from tests.data_generation_utils import pack_bits
 
-
 BLOCK_QUADS = 128
 
 
@@ -49,10 +48,7 @@ def _build_baq_packet(
     num_quads = len(ie_values)
     num_blocks = (num_quads + BLOCK_QUADS - 1) // BLOCK_QUADS
 
-    if not (
-        len(io_values) == len(qe_values) == len(qo_values) == num_quads
-        and len(thidx_values) == num_blocks
-    ):
+    if not (len(io_values) == len(qe_values) == len(qo_values) == num_quads and len(thidx_values) == num_blocks):
         raise ValueError("channel lengths must match and thidx values must match the block count")
 
     ie_data = _pack_baq_channel(ie_values, baq_bits)
@@ -97,14 +93,13 @@ _NRL_A3 = [0.2490, 0.7681, 1.3655, 2.1864]
 _NRL_A4 = [0.129, 0.39, 0.6601, 0.9471, 1.2623, 1.6261, 2.0793, 2.7467]
 
 
-
 def _reconstruct_unsigned_sample_value_baq(mcode: int, baq_bits: int, thidx: int) -> float:
     """Reconstruct floating-point magnitude from BAQ mcode, bit width, and THIDX."""
     if baq_bits == 3:
         if mcode >= 4:
             raise ValueError(f"mcode {mcode} is out of range for {baq_bits}-bit BAQ")
         if thidx <= 3:
-            return None
+            raise ValueError(f"3-bit BAQ with thidx={thidx} (<=3) not implemented in test helper")
         return _NRL_A3[mcode] * _SIGMA_FACTORS[thidx]
 
     if baq_bits == 4:
@@ -119,7 +114,7 @@ def _reconstruct_unsigned_sample_value_baq(mcode: int, baq_bits: int, thidx: int
             raise ValueError(f"mcode {mcode} is out of range for {baq_bits}-bit BAQ")
         if thidx <= 10:
             return float(mcode) if mcode < 15 else _A5[thidx]
-        return None
+        raise ValueError(f"5-bit BAQ with thidx={thidx} (>10) not implemented in test helper")
 
     raise ValueError(f"unsupported BAQ width: {baq_bits}")
 
@@ -140,23 +135,19 @@ def _expected_reconstructed_samples(
         block_end = min(block_start + BLOCK_QUADS, len(ie_values))
 
         ie_block = [
-            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx)
-            * (-1.0 if value < 0 else 1.0)
+            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx) * (-1.0 if value < 0 else 1.0)
             for value in ie_values[block_start:block_end]
         ]
         io_block = [
-            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx)
-            * (-1.0 if value < 0 else 1.0)
+            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx) * (-1.0 if value < 0 else 1.0)
             for value in io_values[block_start:block_end]
         ]
         qe_block = [
-            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx)
-            * (-1.0 if value < 0 else 1.0)
+            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx) * (-1.0 if value < 0 else 1.0)
             for value in qe_values[block_start:block_end]
         ]
         qo_block = [
-            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx)
-            * (-1.0 if value < 0 else 1.0)
+            _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx) * (-1.0 if value < 0 else 1.0)
             for value in qo_values[block_start:block_end]
         ]
 

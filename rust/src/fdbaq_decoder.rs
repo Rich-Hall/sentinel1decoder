@@ -127,10 +127,10 @@ fn decode_channel(
         // - Other channels (IO, QO) need 0 bits (no header)
         let bits_needed_for_header = if read_brc { 3 } else if read_thidx { 8 } else { 0 };
 
-        // CRITICAL FIX: Only fetch a new byte from `data` if the leftover bits in `state` are  
-        // strictly insufficient for the header. If we unconditionally fetch a byte here (especially  
-        // on the last block of a channel), we might consume a byte that actually belongs to the NEXT  
-        // channel. Since `state`is discarded at the end of `decode_channel`, that over-read byte 
+        // CRITICAL FIX: Only fetch a new byte from `data` if the leftover bits in `state` are
+        // strictly insufficient for the header. If we unconditionally fetch a byte here (especially
+        // on the last block of a channel), we might consume a byte that actually belongs to the NEXT
+        // channel. Since `state`is discarded at the end of `decode_channel`, that over-read byte
         // would be lost forever, causing the next channel to lose its synchronization.
         if state.state_len < bits_needed_for_header {
             if let Some(&byte) = data.get(*byte_idx) {
