@@ -184,9 +184,7 @@ class Level0File:
 
             key: Optional[str]
             if signal_type == SignalType.ECHO:
-                key = (
-                    "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
-                )
+                key = "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
             elif signal_type == SignalType.NOISE:
                 key = f"noise_swath_{swath}" if swath in iw_swaths else "noise"
             else:
