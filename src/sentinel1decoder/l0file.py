@@ -182,12 +182,15 @@ class Level0File:
             signal_type = row[fn.SIGNAL_TYPE_DECODED]
             swath = int(row[fn.SWATH_NUM_DECODED])
 
+            key: Optional[str]
             if signal_type == SignalType.ECHO:
-                key: Optional[str] = "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
+                key = (
+                    "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
+                )
             elif signal_type == SignalType.NOISE:
                 key = f"noise_swath_{swath}" if swath in iw_swaths else "noise"
             else:
-                key: Optional[str] = cal_map.get(signal_type)
+                key = cal_map.get(signal_type)
 
             if key:
                 result.setdefault(key, []).append(chunk_id)
