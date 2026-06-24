@@ -7,10 +7,18 @@ from sentinel1decoder._sentinel1decoder import (
     decode_batched_baq_packets,
     decode_single_baq_packet,
 )
+from tests.conftest import BAQSpecExample
 from tests.data_generation_utils import pack_bits
 
 
 BLOCK_QUADS = 128
+
+
+def _scode_to_signed(scode: int, baq_bits: int) -> int:
+    """Convert a BAQ SCode (encoded bit pattern) to its signed integer value."""
+    sign_bit = (scode >> (baq_bits - 1)) & 1
+    mcode = scode & ((1 << (baq_bits - 1)) - 1)
+    return -mcode if sign_bit == 1 else mcode
 
 
 def _encode_baq_sample(value: int, baq_bits: int) -> str:
@@ -96,7 +104,7 @@ def _reconstruct_unsigned_sample_value_baq(mcode: int, baq_bits: int, thidx: int
         if mcode >= 4:
             raise ValueError(f"mcode {mcode} is out of range for {baq_bits}-bit BAQ")
         if thidx <= 3:
-            return float(mcode) if mcode < 3 else _A3[thidx]
+            return None
         return _NRL_A3[mcode] * _SIGMA_FACTORS[thidx]
 
     if baq_bits == 4:
@@ -111,7 +119,7 @@ def _reconstruct_unsigned_sample_value_baq(mcode: int, baq_bits: int, thidx: int
             raise ValueError(f"mcode {mcode} is out of range for {baq_bits}-bit BAQ")
         if thidx <= 10:
             return float(mcode) if mcode < 15 else _A5[thidx]
-        return _NRL_A5[mcode] * _SIGMA_FACTORS[thidx]
+        return None
 
     raise ValueError(f"unsupported BAQ width: {baq_bits}")
 
@@ -128,8 +136,8 @@ def _expected_reconstructed_samples(
     expected = np.empty(len(ie_values) * 2, dtype=np.complex64)
 
     for block_idx, thidx in enumerate(thidx_values):
-        block_start = block_idx * 128
-        block_end = min(block_start + 128, len(ie_values))
+        block_start = block_idx * BLOCK_QUADS
+        block_end = min(block_start + BLOCK_QUADS, len(ie_values))
 
         ie_block = [
             _reconstruct_unsigned_sample_value_baq(abs(value), baq_bits, thidx)
@@ -218,7 +226,7 @@ def test_batched_baq_packets_match_single(baq_bits: int) -> None:
 
 
 @pytest.mark.parametrize("baq_bits", [3, 4, 5])
-def test_single_baq_packet_with_nonezero_thidx(baq_bits: int) -> None:
+def test_single_baq_packet_with_nonzero_thidx(baq_bits: int) -> None:
     """Test BAQ decoding with nonzero THIDX threshold indices."""
     num_quads = 256
     thidx_values = [5,5]
@@ -277,3 +285,52 @@ def test_single_baq_packet_short_packet_raises_value_error(baq_bits: int) -> Non
 
     with pytest.raises(ValueError, match="Data too short for BAQ"):
         decode_single_baq_packet(short_data, num_quads=num_quads, baq_bits=baq_bits)
+
+
+@pytest.mark.parametrize(
+    "example_index",
+    [0, 1, 2, 3],
+    ids=[
+        "3-bit normal reconstruction (NRL x SF)",
+        "5-bit simple reconstruction (low mcode)",
+        "5-bit simple reconstruction (high mcode)",
+        "4-bit simple reconstruction (high mcode)",
+    ],
+)
+def test_baq_single_packet_spec_example(
+    example_index: int, baq_spec_examples: list[BAQSpecExample]
+) -> None:
+    """Test BAQ decoder against spec examples from conftest."""
+    example = baq_spec_examples[example_index]
+
+    signed_value = _scode_to_signed(example.scode, example.baq_bits)
+
+    # All four channels use the same sample values to construct the BAQ packet.
+    data = _build_baq_packet(
+        ie_values=[signed_value],
+        io_values=[signed_value],
+        qe_values=[signed_value],
+        qo_values=[signed_value],
+        baq_bits=example.baq_bits,
+        thidx_values=[example.thidx],
+    )
+
+    decoded = decode_single_baq_packet(
+        data, num_quads=1, baq_bits=example.baq_bits
+    )
+
+    expected = np.array(
+        [
+            complex(example.expected_value, example.expected_value),
+            complex(example.expected_value, example.expected_value),
+        ],
+        dtype=np.complex64,
+    )
+
+    np.testing.assert_allclose(
+        decoded,
+        expected,
+        rtol=1e-4,
+        atol=1e-4,
+        err_msg=f"Spec example page {example.page}: {example.description}",
+    )
