@@ -22,7 +22,7 @@ The core decoding functions are implemented in Rust and run multithreaded, so I/
 pip install sentinel1decoder
 ```
 
-Requires Python 3.8+, NumPy, and Pandas.
+Requires Python 3.9–3.13, NumPy 2.0+, and Pandas.
 
 ## Quick start
 

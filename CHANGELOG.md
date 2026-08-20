@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Dropped Python 3.8 support; added Python 3.12 and 3.13 support (requires Python 3.9–3.13).
+- Raised minimum NumPy version to 2.0.
+
 ### Planned
 - BAQ mode C (3/4/5-bit) decoding
 - Full sub-commutated data decoding
