@@ -8,9 +8,9 @@ A Python decoder for Sentinel-1 Level 0 files. The Level 0 format consists of th
 
 An example Jupyter notebook demonstrating the process of decoding Level 0 data and forming an image is available on GitHub [here](https://github.com/Rich-Hall/sentinel1Level0DecodingDemo) or on nbviewer.org [here](https://nbviewer.org/github/Rich-Hall/sentinel1Level0DecodingDemo/blob/main/sentinel1Level0DecodingDemo.ipynb).
 
-This code is based on an implementation in C by jmfriedt, which can be found [here](https://github.com/jmfriedt/sentinel1_level0).
+This code was originally based on an implementation in C by jmfriedt, which can be found [here](https://github.com/jmfriedt/sentinel1_level0).
 
-The core decoding functions are implemented in Rust and run multithreaded, so I/Q extraction is quite fast.
+The core decoding functions are implemented in Rust and run multithreaded, so I/Q extraction is quite fast. Bypass, 3/4/5-bit BAQ, and FDBAQ are supported.
 
 ## Documentation
 
@@ -30,8 +30,8 @@ Requires Python 3.9–3.13, NumPy 2.0+, and Pandas.
 import sentinel1decoder
 
 l0file = sentinel1decoder.Level0File(filename)
-l0file.packet_metadata   # packet metadata
-l0file.ephemeris        # satellite ephemeris
+l0file.packet_metadata  # packet metadata
+l0file.ephemeris  # satellite ephemeris
 iq_data = l0file.get_acquisition_chunk_data(0)  # decode I/Q for acquisition chunk 0
 ```
 

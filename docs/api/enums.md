@@ -80,7 +80,7 @@ Receive channel ID (vertical or horizontal polarisation).
 
 ## BaqMode
 
-Block Adaptive Quantisation mode used for echo compression.
+Block Adaptive Quantisation mode (`BAQMOD` in the space packet). Bypass, 3/4/5-bit BAQ, and FDBAQ are decoded by `Level0Decoder.decode_packets`.
 
 | Member | Value |
 |--------|-------|
