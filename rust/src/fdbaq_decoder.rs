@@ -3,11 +3,11 @@
 //! This module contains the core FDBAQ (Flexible Dynamic Block Adaptive Quantization)
 //! decoding logic for Sentinel-1 packets.
 
-use std::sync::LazyLock;
-use rayon::prelude::*;
 use num_complex::Complex32;
+use rayon::prelude::*;
+use std::sync::LazyLock;
 
-use crate::huffman::{HuffmanDecoderSampleCode, HuffmanDecodingState, HuffmanCode};
+use crate::huffman::{HuffmanCode, HuffmanDecoderSampleCode, HuffmanDecodingState};
 use crate::huffman_codes::get_huffman_codes;
 use crate::sample_value_reconstruction::reconstruct_channel;
 
@@ -64,17 +64,23 @@ fn get_decoder(brc: u8) -> Option<&'static HuffmanDecoderSampleCode> {
 /// # Returns
 ///
 /// The reconstructed bitstream
-fn reconstruct_bitstream(excess_symbols: &Vec<(bool, u8)>, excess_symbol_codes: &Vec<HuffmanCode<(bool, u8)>>, state: HuffmanDecodingState) -> HuffmanDecodingState {
+fn reconstruct_bitstream(
+    excess_symbols: &Vec<(bool, u8)>,
+    excess_symbol_codes: &Vec<HuffmanCode<(bool, u8)>>,
+    state: HuffmanDecodingState,
+) -> HuffmanDecodingState {
     let mut bitstream = state.state_bits;
     let mut bitstream_len = state.state_len;
     for symbol in excess_symbols.iter().rev() {
-        let code = excess_symbol_codes.iter().find(|code| code.symbol == *symbol).unwrap();
+        let code = excess_symbol_codes
+            .iter()
+            .find(|code| code.symbol == *symbol)
+            .unwrap();
         bitstream |= (code.bits as u16) << bitstream_len;
         bitstream_len += code.bit_len;
     }
     HuffmanDecodingState::new(bitstream, bitstream_len)
 }
-
 
 /// Decode a channel's data (one quarter of the quad data).
 ///
@@ -125,12 +131,18 @@ fn decode_channel(
         // - BRC needs 3 bits
         // - THIDX needs 8 bits
         // - Other channels (IO, QO) need 0 bits (no header)
-        let bits_needed_for_header = if read_brc { 3 } else if read_thidx { 8 } else { 0 };
+        let bits_needed_for_header = if read_brc {
+            3
+        } else if read_thidx {
+            8
+        } else {
+            0
+        };
 
-        // CRITICAL FIX: Only fetch a new byte from `data` if the leftover bits in `state` are
+        // Only fetch a new byte from `data` if the leftover bits in `state` are
         // strictly insufficient for the header. If we unconditionally fetch a byte here (especially
         // on the last block of a channel), we might consume a byte that actually belongs to the NEXT
-        // channel. Since `state`is discarded at the end of `decode_channel`, that over-read byte
+        // channel. Since `state` is discarded at the end of `decode_channel`, that over-read byte
         // would be lost forever, causing the next channel to lose its synchronization.
         if state.state_len < bits_needed_for_header {
             if let Some(&byte) = data.get(*byte_idx) {
@@ -170,7 +182,9 @@ fn decode_channel(
             let thidx = ((boundary_state_bits >> (boundary_state_len - 8)) & 0xFF) as u8;
             thidxs.push(thidx);
 
-            brc = *brcs.get(block_idx).ok_or_else(|| format!("Not enough BRC codes for block {}", block_idx))?;
+            brc = *brcs
+                .get(block_idx)
+                .ok_or_else(|| format!("Not enough BRC codes for block {}", block_idx))?;
             let remaining_bits = boundary_state_bits & ((1 << (boundary_state_len - 8)) - 1);
             let remaining_len = boundary_state_len - 8;
             decoder = get_decoder(brc).ok_or_else(|| format!("Invalid BRC value: {}", brc))?;
@@ -178,24 +192,28 @@ fn decode_channel(
             initial_symbols = symbols;
             state = next_state;
         } else {
-            brc = *brcs.get(block_idx).ok_or_else(|| format!("Not enough BRC codes for block {}", block_idx))?;
+            brc = *brcs
+                .get(block_idx)
+                .ok_or_else(|| format!("Not enough BRC codes for block {}", block_idx))?;
             decoder = get_decoder(brc).ok_or_else(|| format!("Invalid BRC value: {}", brc))?;
-            let (symbols, next_state) = decoder.read_bitstream(boundary_state_bits, boundary_state_len);
+            let (symbols, next_state) =
+                decoder.read_bitstream(boundary_state_bits, boundary_state_len);
             initial_symbols = symbols;
             state = next_state;
         }
-
 
         // Start with symbols from BRC byte (if any)
         let mut block_symbols = initial_symbols;
 
         // Decode remaining symbols for this block
         while block_symbols.len() < symbols_needed {
-            if *byte_idx >= data.len() {
-                return Err("Unexpected end of data when decoding symbols (1)".to_string());
-            }
-            let byte = *data.get(*byte_idx)
-                .ok_or_else(|| "Unexpected end of data when decoding symbols (2)".to_string())?;
+            let byte = *data.get(*byte_idx).ok_or_else(|| {
+                format!(
+                    "Unexpected end of data when decoding symbols. Byte index {} exceeded data length {}",
+                    *byte_idx,
+                    data.len()
+                )
+            })?;
             *byte_idx += 1;
 
             let state_id = state.to_state_id();
@@ -208,7 +226,8 @@ fn decode_channel(
         // Take only the symbols we need (in case we decoded too many)
         if block_symbols.len() > symbols_needed {
             let excess_symbols = block_symbols.split_off(symbols_needed);
-            let new_block_state = reconstruct_bitstream(&excess_symbols, &decoder.huffman_tree, state);
+            let new_block_state =
+                reconstruct_bitstream(&excess_symbols, &decoder.huffman_tree, state);
             state = new_block_state;
         }
 
@@ -238,23 +257,58 @@ fn decode_channel(
 ///
 /// A vector of complex numbers representing the decoded samples. The samples are interleaved:
 /// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
-pub fn decode_single_fdbaq_packet_inner(data: &[u8], num_quads: usize) -> Result<Vec<Complex32>, String> {
+pub fn decode_single_fdbaq_packet_inner(
+    data: &[u8],
+    num_quads: usize,
+) -> Result<Vec<Complex32>, String> {
     let mut byte_idx = 0;
 
     let mut brcs: Vec<u8> = Vec::new();
     let mut thidxs: Vec<u8> = Vec::new();
 
     // Decode IE channel (reads BRCs)
-    let s_ie = decode_channel(data, &mut byte_idx, num_quads, &mut brcs, &mut thidxs, true, false)?;
+    let s_ie = decode_channel(
+        data,
+        &mut byte_idx,
+        num_quads,
+        &mut brcs,
+        &mut thidxs,
+        true,
+        false,
+    )?;
 
     // Decode IO channel (reuses BRCs)
-    let s_io = decode_channel(data, &mut byte_idx, num_quads, &mut brcs, &mut thidxs, false, false)?;
+    let s_io = decode_channel(
+        data,
+        &mut byte_idx,
+        num_quads,
+        &mut brcs,
+        &mut thidxs,
+        false,
+        false,
+    )?;
 
     // Decode QE channel (reuses BRCs, reads THIDXs)
-    let s_qe = decode_channel(data, &mut byte_idx, num_quads, &mut brcs, &mut thidxs, false, true)?;
+    let s_qe = decode_channel(
+        data,
+        &mut byte_idx,
+        num_quads,
+        &mut brcs,
+        &mut thidxs,
+        false,
+        true,
+    )?;
 
     // Decode QO channel (reuses BRCs)
-    let s_qo = decode_channel(data, &mut byte_idx, num_quads, &mut brcs, &mut thidxs, false, false)?;
+    let s_qo = decode_channel(
+        data,
+        &mut byte_idx,
+        num_quads,
+        &mut brcs,
+        &mut thidxs,
+        false,
+        false,
+    )?;
 
     // Reconstruct the sample values
     let ie = reconstruct_channel(&s_ie, &brcs, &thidxs);
@@ -265,13 +319,12 @@ pub fn decode_single_fdbaq_packet_inner(data: &[u8], num_quads: usize) -> Result
     // Combine channels into interleaved complex samples: IE[i]+QE[i]j, IO[i]+QO[i]j, ...
     let mut complex_samples = Vec::with_capacity(ie.len() * 2);
     for i in 0..ie.len() {
-        complex_samples.push(Complex32::new(ie[i], qe[i]));  // IE[i] + QE[i]j
-        complex_samples.push(Complex32::new(io[i], qo[i]));  // IO[i] + QO[i]j
+        complex_samples.push(Complex32::new(ie[i], qe[i])); // IE[i] + QE[i]j
+        complex_samples.push(Complex32::new(io[i], qo[i])); // IO[i] + QO[i]j
     }
 
     Ok(complex_samples)
 }
-
 
 pub fn decode_batched_fdbaq_packets_inner(
     packets: &[Vec<u8>],

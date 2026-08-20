@@ -1,13 +1,14 @@
 //! Python bindings for Sentinel-1 decoder.
 //!
 //! This module provides Python bindings for the Rust implementation of the
-//! Sentinel-1 FDBAQ and bypass decoders.
+//! Sentinel-1 FDBAQ, BAQ, and bypass decoders.
 //!
 //! # Module Organization
 //!
 //! - `huffman.rs`: Core Huffman decoder structures and lookup table building logic
 //! - `huffman_codes.rs`: Huffman code tables for all 5 BRC values
 //! - `fdbaq_decoder.rs`: Core FDBAQ decoding logic
+//! - `baq_decoder.rs`: Core BAQ decoding logic
 //! - `bypass_decoder.rs`: Core bypass decoding logic
 //! - `lib.rs`: Python bindings and module setup
 
@@ -18,8 +19,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList};
 
-mod bypass_decoder;
 mod baq_decoder;
+mod bypass_decoder;
 mod fdbaq_decoder;
 mod headers;
 mod huffman;
@@ -27,10 +28,10 @@ mod huffman_codes;
 mod lookup_tables;
 mod sample_value_reconstruction;
 
+use crate::baq_decoder::{decode_batched_baq_packets_inner, decode_single_baq_packet_inner};
 use crate::bypass_decoder::{
     decode_batched_bypass_packets_inner, decode_single_bypass_packet_inner,
 };
-use crate::baq_decoder::{decode_batched_baq_packets_inner, decode_single_baq_packet_inner};
 use crate::fdbaq_decoder::{decode_batched_fdbaq_packets_inner, decode_single_fdbaq_packet_inner};
 use crate::headers::{decode_packet_headers_inner, PacketHeaderColumns};
 

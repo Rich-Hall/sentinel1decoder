@@ -3,10 +3,9 @@
 //! This module contains the core BAQ (Block Adaptive Quantization) decoding logic for Sentinel-1 packets.
 //! It supports 3-bit, 4-bit and 5-bit BAQ modes.
 
-use rayon::prelude::*;
-use num_complex::Complex32;
 use crate::sample_value_reconstruction::reconstruct_unsigned_sample_value_baq;
-
+use num_complex::Complex32;
+use rayon::prelude::*;
 
 /// Extract an integer of the given width from a bitstream at a bit offset.
 ///
@@ -40,7 +39,11 @@ fn decode_baq_sample(data: &[u8], bit_offset: usize, baq_bits: u8, thidx: u8) ->
     let sign = (bits >> (baq_bits - 1)) & 1 == 1;
     let mcode = bits & ((1 << (baq_bits - 1)) - 1);
     let mag = reconstruct_unsigned_sample_value_baq(mcode, baq_bits, thidx);
-    if sign { -mag } else { mag }
+    if sign {
+        -mag
+    } else {
+        mag
+    }
 }
 
 /// Decode BAQ (Block Adaptive Quantization) data from Sentinel-1 packets.
@@ -59,7 +62,15 @@ fn decode_baq_sample(data: &[u8], bit_offset: usize, baq_bits: u8, thidx: u8) ->
 ///
 /// A vector of complex numbers representing the decoded samples. The samples are interleaved:
 /// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
-pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u8) -> Result<Vec<Complex32>, String> {
+pub fn decode_single_baq_packet_inner(
+    data: &[u8],
+    num_quads: usize,
+    baq_bits: u8,
+) -> Result<Vec<Complex32>, String> {
+    if !matches!(baq_bits, 3 | 4 | 5) {
+        return Err(format!("Invalid BAQ bits: {}", baq_bits));
+    }
+
     // Number of BAQ blocks (128 quads per block)
     let num_baq_blocks = (num_quads + 127) / 128;
 
@@ -73,7 +84,12 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
     let qo_len = nw_ie_io_qo * 2;
 
     if data.len() < ie_len + io_len + qe_len + qo_len {
-        return Err(format!("Data too short for BAQ {} decoding. Expected minimum {} bytes, got {}", baq_bits, ie_len + io_len + qe_len + qo_len, data.len()));
+        return Err(format!(
+            "Data too short for BAQ {} decoding. Expected minimum {} bytes, got {}",
+            baq_bits,
+            ie_len + io_len + qe_len + qo_len,
+            data.len()
+        ));
     }
 
     let ie_data = &data[0..ie_len];
@@ -118,6 +134,20 @@ pub fn decode_single_baq_packet_inner(data: &[u8], num_quads: usize, baq_bits: u
     Ok(out)
 }
 
+/// Decode a batch of BAQ packets in parallel.
+///
+/// Each packet is decoded with [`decode_single_baq_packet_inner`] using Rayon's
+/// parallel iterator.
+///
+/// # Arguments
+///
+/// * `packets` - Encoded packet payloads
+/// * `num_quads` - Number of quad samples to decode per packet
+/// * `baq_bits` - Number of bits per sample (3, 4, or 5)
+///
+/// # Returns
+///
+/// One vector of interleaved complex samples per input packet.
 pub fn decode_batched_baq_packets_inner(
     packets: &[Vec<u8>],
     num_quads: usize,
