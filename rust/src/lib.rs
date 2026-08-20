@@ -19,6 +19,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList};
 
 mod bypass_decoder;
+mod baq_decoder;
 mod fdbaq_decoder;
 mod headers;
 mod huffman;
@@ -29,6 +30,7 @@ mod sample_value_reconstruction;
 use crate::bypass_decoder::{
     decode_batched_bypass_packets_inner, decode_single_bypass_packet_inner,
 };
+use crate::baq_decoder::{decode_batched_baq_packets_inner, decode_single_baq_packet_inner};
 use crate::fdbaq_decoder::{decode_batched_fdbaq_packets_inner, decode_single_fdbaq_packet_inner};
 use crate::headers::{decode_packet_headers_inner, PacketHeaderColumns};
 
@@ -96,6 +98,62 @@ where
     }
 
     Ok(output.into())
+}
+
+/// Decode BAQ (Block Adaptive Quantization) data from Sentinel-1 packets.
+///
+/// BAQ mode encodes samples with 3, 4, or 5 bits per sample, using THIDX threshold
+/// index values stored in the QE channel for each 128-quad block to reconstruct
+/// sample magnitudes.
+///
+/// # Arguments
+///
+/// * `data` - Raw bytes containing the encoded data
+/// * `num_quads` - Number of quad samples to decode
+/// * `baq_bits` - Number of bits per sample (3, 4, or 5)
+///
+/// # Returns
+///
+/// A NumPy array of complex numbers representing the decoded samples. The samples are interleaved:
+/// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
+#[pyfunction]
+fn decode_single_baq_packet(
+    data: &[u8],
+    num_quads: usize,
+    baq_bits: usize,
+    py: Python,
+) -> PyResult<Py<PyAny>> {
+    let complex_samples = decode_single_baq_packet_inner(data, num_quads, baq_bits as u8)
+        .map_err(|e| PyValueError::new_err(e))?;
+
+    Ok(complex_samples.into_pyarray(py).to_owned().into())
+}
+
+/// Decode a batch of BAQ (Block Adaptive Quantization) packets in parallel.
+///
+/// This function decodes multiple BAQ-encoded packets using Rayon's parallel
+/// iterator for improved throughput.
+///
+/// # Arguments
+///
+/// * `packets` - Python list of bytes objects, each containing one encoded packet
+/// * `num_quads` - Number of quad samples to decode per packet
+/// * `baq_bits` - Number of bits per sample (3, 4, or 5)
+///
+/// # Returns
+///
+/// A 2D NumPy array of shape `(num_packets, num_quads * 2)` containing complex
+/// decoded samples for each packet.
+#[pyfunction]
+fn decode_batched_baq_packets(
+    packets: &Bound<'_, PyList>,
+    num_quads: usize,
+    baq_bits: usize,
+    py: Python,
+) -> PyResult<Py<PyAny>> {
+    decode_batched_packets_helper(packets, num_quads, py, |packet_data, nq| {
+        decode_batched_baq_packets_inner(packet_data, nq, baq_bits as u8)
+    })
 }
 
 #[pyfunction]
@@ -274,6 +332,8 @@ fn decode_packet_headers(data: &[u8], py: Python) -> PyResult<Py<PyAny>> {
 /// all the functions and types exposed to Python.
 #[pymodule]
 fn _sentinel1decoder(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(decode_single_baq_packet, m)?)?;
+    m.add_function(wrap_pyfunction!(decode_batched_baq_packets, m)?)?;
     m.add_function(wrap_pyfunction!(decode_single_fdbaq_packet, m)?)?;
     m.add_function(wrap_pyfunction!(decode_batched_fdbaq_packets, m)?)?;
     m.add_function(wrap_pyfunction!(decode_single_bypass_packet, m)?)?;

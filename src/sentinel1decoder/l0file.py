@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from sentinel1decoder import _field_names as fn
+from sentinel1decoder.enums import SignalType
 from sentinel1decoder.l0decoder import Level0Decoder
 from sentinel1decoder.utilities import read_subcommed_data
 
@@ -126,6 +127,7 @@ class Level0File:
             "swl": row[fn.SWL_DECODED],
             "pri": row[fn.PRI_DECODED],
             "elevation_beam_address": row[fn.EBADR_DECODED],
+            "num_packets": len(meta),
         }
 
     def iter_chunks_matching(self, **kwargs: Any) -> Iterator[int]:
@@ -147,6 +149,51 @@ class Level0File:
             constants = self.get_acquisition_chunk_constants(chunk_id)
             if all(constants.get(k) == v for k, v in kwargs.items()):
                 yield chunk_id
+
+    def get_chunks_summary(self) -> dict[str, list[int]]:
+        """Categorise all acquisition chunks by signal type and swath number.
+
+        Scans every chunk once and groups them into SM / IW swath-specific
+        echo/noise buckets, calibration groups, and a ``skipped`` bucket for
+        partial chunks (8-packet ECHO blocks).
+
+        Returns:
+            Dict mapping category names to lists of chunk IDs.  Dynamic keys
+            include ``echo`` / ``echo_swath_10`` / ``echo_swath_11`` /
+            ``echo_swath_12``, ``noise`` / ``noise_swath_10`` /
+            ``noise_swath_11`` / ``noise_swath_12``, ``skipped``, and
+            calibration types ``cal_rx``, ``cal_tx``, ``cal_epdn``,
+            ``cal_apdn``, ``cal_ta_or_txiso``, ``cal_tx_iso``.
+        """
+        iw_swaths = {10, 11, 12}
+        cal_map = {
+            SignalType.RX_CAL: "cal_rx",
+            SignalType.TX_CAL: "cal_tx",
+            SignalType.EPDN_CAL: "cal_epdn",
+            SignalType.APDN_CAL_S1AB_ONLY: "cal_apdn",
+            SignalType.TA_CAL_OR_TX_CAL_ISO: "cal_ta_or_txiso",
+            SignalType.TXH_CAL_ISO_S1AB_ONLY: "cal_tx_iso",
+        }
+        result: dict[str, list[int]] = {}
+
+        for chunk_id in self.acquisition_chunks:
+            meta = self.get_acquisition_chunk_metadata(chunk_id)
+            row = meta.iloc[0]
+            signal_type = row[fn.SIGNAL_TYPE_DECODED]
+            swath = int(row[fn.SWATH_NUM_DECODED])
+
+            key: Optional[str]
+            if signal_type == SignalType.ECHO:
+                key = "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
+            elif signal_type == SignalType.NOISE:
+                key = f"noise_swath_{swath}" if swath in iw_swaths else "noise"
+            else:
+                key = cal_map.get(signal_type)
+
+            if key:
+                result.setdefault(key, []).append(chunk_id)
+
+        return result
 
     def get_acquisition_chunk_data(self, acquisition_chunk: int, try_load_from_file: bool = True) -> np.ndarray:
         """

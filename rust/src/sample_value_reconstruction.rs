@@ -45,6 +45,12 @@ fn unhandled_reconstruction_case( mcode: u8, brc: u8, thidx: u8) -> ! {
     panic!("Unhandled reconstruction case: mcode={}, brc={}, thidx={}", mcode, brc, thidx);
 }
 
+#[cold]
+#[inline(never)]
+fn unhandled_reconstruction_case_baq( mcode: u8, baq_bits: u8, thidx: u8) -> ! {
+    panic!("Unhandled reconstruction case: mcode={}, baq_bits={}, thidx={}", mcode, baq_bits, thidx);
+}
+
 #[inline(always)]
 pub fn reconstruct_unsigned_sample_value(mcode: u8, brc: u8, thidx: u8) -> f32 {
     match brc {
@@ -130,6 +136,57 @@ pub fn reconstruct_unsigned_sample_value(mcode: u8, brc: u8, thidx: u8) -> f32 {
         }
         _ => {
             unhandled_reconstruction_case(mcode, brc, thidx);
+        }
+    }
+}
+
+#[inline(always)]
+pub fn reconstruct_unsigned_sample_value_baq(mcode: u8, baq_bits: u8, thidx: u8) -> f32 {
+    match baq_bits {
+        3 => {
+            if mcode >= 4 {
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
+            }
+            if thidx <= 3 {
+                if mcode < 3 {
+                    mcode as f32
+                } else {
+                    A3[thidx as usize]
+                }
+            } else {
+                NRL_A3[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        4 => {
+            if mcode >= 8 {
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
+            }
+            if thidx <= 5 {
+                if mcode < 7 {
+                    mcode as f32
+                } else {
+                    A4[thidx as usize]
+                }
+            } else {
+                NRL_A4[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        5 => {
+            if mcode >= 16 {
+                unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
+            }
+            if thidx <= 10 {
+                if mcode < 15 {
+                    mcode as f32
+                } else {
+                    A5[thidx as usize]
+                }
+            } else {
+                NRL_A5[mcode as usize] * SIGMA_FACTORS[thidx as usize]
+            }
+        }
+        _ => {
+            unhandled_reconstruction_case_baq(mcode, baq_bits, thidx);
         }
     }
 }
