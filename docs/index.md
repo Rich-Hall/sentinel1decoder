@@ -2,6 +2,10 @@
 
 A Python decoder for Sentinel-1 Level 0 files. Decodes raw space packets downlinked from the Sentinel-1 spacecraft and produces I/Q sensor output from the SAR instrument.
 
+Decodes bypass, 3/4/5-bit BAQ, and FDBAQ.
+
+Requires Python 3.9–3.13 and NumPy 2.0+.
+
 For a worked example of decoding Level 0 data and forming an image, see the [demo notebook](https://github.com/Rich-Hall/sentinel1Level0DecodingDemo) on GitHub.
 
 ## Quick start
@@ -37,5 +41,4 @@ iq_data = l0file.get_acquisition_chunk_data(0)
 
 ## Planned enhancements
 
-- **BAQ mode C** — Decode BAQ 3/4/5-bit compressed echoes (currently only bypass and FDBAQ are supported).
 - **Full sub-commutated data** — Decode the complete 64-word sub-commutated ancillary block (e.g. antenna temperatures and other housekeeping) in addition to ephemeris.

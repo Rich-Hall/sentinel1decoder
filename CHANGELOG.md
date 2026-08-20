@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Planned
+- Full sub-commutated data decoding
+
+## [2.1.0] - 2026-08-19
+
+### Added
+- 3/4/5-bit BAQ decoding in the Rust backend, used by `Level0Decoder.decode_packets` and `Level0File.get_acquisition_chunk_data` ([#41](https://github.com/Rich-Hall/sentinel1decoder/pull/41), [@liuzl621](https://github.com/liuzl621)).
+- `Level0File.get_chunks_summary()` — groups acquisition chunks by signal type and IW swath (echo, noise, and calibration) ([#41](https://github.com/Rich-Hall/sentinel1decoder/pull/41), [@liuzl621](https://github.com/liuzl621)).
+- `num_packets` on `get_acquisition_chunk_constants` and as a filter for `iter_chunks_matching` (for example to exclude short IW azimuth-steering pulses).
+- `cargo fmt` as a pre-commit hook, run in CI with the existing Python lint job.
+
+### Fixed
+- FDBAQ Huffman decoding could consume a byte that belonged to the next I/Q channel at a BAQ-block boundary, desynchronizing later channels in the packet ([#41](https://github.com/Rich-Hall/sentinel1decoder/pull/41), [@liuzl621](https://github.com/liuzl621)).
+
+### Changed
+- Dropped Python 3.8 support; added Python 3.12 and 3.13 support (requires Python 3.9–3.13).
+- Raised minimum NumPy version to 2.0.
+- Short IW echo chunks (for example 8-packet pulses with different azimuth beam steering) are included with the other echoes of that swath in `get_chunks_summary`; filter that list by `num_packets` if you need to omit them.
+
 ## [2.0.0] - 2026-02-07
 
 ### Acquisition Chunks
@@ -84,18 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type annotations for all public APIs
 - Inline documentation for all classes and methods
 
----
-
-## [Unreleased]
-
-### Changed
-- Dropped Python 3.8 support; added Python 3.12 and 3.13 support (requires Python 3.9–3.13).
-- Raised minimum NumPy version to 2.0.
-
-### Planned
-- BAQ mode C (3/4/5-bit) decoding
-- Full sub-commutated data decoding
-
+[2.1.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v2.1.0
 [2.0.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v2.0.0
 [1.1.1]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Rich-Hall/sentinel1decoder/releases/tag/v1.1.0
