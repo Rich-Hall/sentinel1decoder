@@ -113,7 +113,7 @@ class Level0File:
 
         Returns:
             Dict with keys: signal_type, swath_num, num_quads, baq_mode, swst,
-            swl, pri, elevation_beam_address. Values are from the first packet
+            swl, pri, elevation_beam_address, num_packets. Values are from the first packet
             in the chunk.
         """
         meta = self.get_acquisition_chunk_metadata(acquisition_chunk)
@@ -136,7 +136,7 @@ class Level0File:
         Args:
             **kwargs: Field names and values to match. Keys must be among:
                 signal_type, swath_num, num_quads, baq_mode, swst, swl, pri,
-                elevation_beam_address.
+                elevation_beam_address, num_packets.
 
         Yields:
             Chunk IDs that match all criteria.
@@ -154,16 +154,19 @@ class Level0File:
         """Categorise all acquisition chunks by signal type and swath number.
 
         Scans every chunk once and groups them into SM / IW swath-specific
-        echo/noise buckets, calibration groups, and a ``skipped`` bucket for
-        partial chunks (8-packet ECHO blocks).
+        echo/noise buckets and calibration groups. Short echo blocks (for
+        example 8-packet IW pulses with different azimuth beam steering) are
+        included with the other echoes of that swath; filter with
+        ``iter_chunks_matching`` (e.g. ``num_packets``) if you want to exclude
+        them.
 
         Returns:
-            Dict mapping category names to lists of chunk IDs.  Dynamic keys
+            Dict mapping category names to lists of chunk IDs. Dynamic keys
             include ``echo`` / ``echo_swath_10`` / ``echo_swath_11`` /
             ``echo_swath_12``, ``noise`` / ``noise_swath_10`` /
-            ``noise_swath_11`` / ``noise_swath_12``, ``skipped``, and
-            calibration types ``cal_rx``, ``cal_tx``, ``cal_epdn``,
-            ``cal_apdn``, ``cal_ta_or_txiso``, ``cal_tx_iso``.
+            ``noise_swath_11`` / ``noise_swath_12``, and calibration types
+            ``cal_rx``, ``cal_tx``, ``cal_epdn``, ``cal_apdn``,
+            ``cal_ta_or_txiso``, ``cal_tx_iso``.
         """
         iw_swaths = {10, 11, 12}
         cal_map = {
@@ -184,7 +187,7 @@ class Level0File:
 
             key: Optional[str]
             if signal_type == SignalType.ECHO:
-                key = "skipped" if len(meta) == 8 else f"echo_swath_{swath}" if swath in iw_swaths else "echo"
+                key = f"echo_swath_{swath}" if swath in iw_swaths else "echo"
             elif signal_type == SignalType.NOISE:
                 key = f"noise_swath_{swath}" if swath in iw_swaths else "noise"
             else:
