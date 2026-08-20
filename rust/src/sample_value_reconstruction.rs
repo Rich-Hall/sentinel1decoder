@@ -1,5 +1,5 @@
-use crate::lookup_tables::*;
 use crate::huffman_codes::NUM_OF_UNSIGNED_VALUES_PER_BRC;
+use crate::lookup_tables::*;
 
 use std::sync::LazyLock;
 
@@ -9,7 +9,11 @@ static UNSIGNED_SAMPLE_VALUE_TABLE: LazyLock<Vec<f32>> = LazyLock::new(|| {
         let mcode_count = NUM_OF_UNSIGNED_VALUES_PER_BRC[brc as usize];
         for thidx in 0..256 {
             for mcode in 0..mcode_count {
-                table.push(reconstruct_unsigned_sample_value(mcode as u8, brc as u8, thidx as u8));
+                table.push(reconstruct_unsigned_sample_value(
+                    mcode as u8,
+                    brc as u8,
+                    thidx as u8,
+                ));
             }
         }
     }
@@ -21,15 +25,21 @@ static UNSIGNED_SAMPLE_VALUE_TABLE: LazyLock<Vec<f32>> = LazyLock::new(|| {
 // There are always 256 possible THIDXs, and a variable number of mcodes per each BRC
 const LOOKUP_TABLE_BRC_OFFSETS: [usize; 5] = [
     0,
-    256*NUM_OF_UNSIGNED_VALUES_PER_BRC[0],
-    256*(NUM_OF_UNSIGNED_VALUES_PER_BRC[0] + NUM_OF_UNSIGNED_VALUES_PER_BRC[1]),
-    256*(NUM_OF_UNSIGNED_VALUES_PER_BRC[0] + NUM_OF_UNSIGNED_VALUES_PER_BRC[1] + NUM_OF_UNSIGNED_VALUES_PER_BRC[2]),
-    256*(NUM_OF_UNSIGNED_VALUES_PER_BRC[0] + NUM_OF_UNSIGNED_VALUES_PER_BRC[1] + NUM_OF_UNSIGNED_VALUES_PER_BRC[2] + NUM_OF_UNSIGNED_VALUES_PER_BRC[3]),
+    256 * NUM_OF_UNSIGNED_VALUES_PER_BRC[0],
+    256 * (NUM_OF_UNSIGNED_VALUES_PER_BRC[0] + NUM_OF_UNSIGNED_VALUES_PER_BRC[1]),
+    256 * (NUM_OF_UNSIGNED_VALUES_PER_BRC[0]
+        + NUM_OF_UNSIGNED_VALUES_PER_BRC[1]
+        + NUM_OF_UNSIGNED_VALUES_PER_BRC[2]),
+    256 * (NUM_OF_UNSIGNED_VALUES_PER_BRC[0]
+        + NUM_OF_UNSIGNED_VALUES_PER_BRC[1]
+        + NUM_OF_UNSIGNED_VALUES_PER_BRC[2]
+        + NUM_OF_UNSIGNED_VALUES_PER_BRC[3]),
 ];
 
 #[inline(always)]
 fn get_lookup_table_block_offset(brc: u8, thidx: u8) -> usize {
-    LOOKUP_TABLE_BRC_OFFSETS[brc as usize] + (thidx as usize) * NUM_OF_UNSIGNED_VALUES_PER_BRC[brc as usize]
+    LOOKUP_TABLE_BRC_OFFSETS[brc as usize]
+        + (thidx as usize) * NUM_OF_UNSIGNED_VALUES_PER_BRC[brc as usize]
 }
 
 #[inline(always)]
@@ -41,14 +51,20 @@ fn lookup_unsigned_sample_value(mcode: u8, brc: u8, thidx: u8) -> f32 {
 
 #[cold]
 #[inline(never)]
-fn unhandled_reconstruction_case( mcode: u8, brc: u8, thidx: u8) -> ! {
-    panic!("Unhandled reconstruction case: mcode={}, brc={}, thidx={}", mcode, brc, thidx);
+fn unhandled_reconstruction_case(mcode: u8, brc: u8, thidx: u8) -> ! {
+    panic!(
+        "Unhandled reconstruction case: mcode={}, brc={}, thidx={}",
+        mcode, brc, thidx
+    );
 }
 
 #[cold]
 #[inline(never)]
-fn unhandled_reconstruction_case_baq( mcode: u8, baq_bits: u8, thidx: u8) -> ! {
-    panic!("Unhandled reconstruction case: mcode={}, baq_bits={}, thidx={}", mcode, baq_bits, thidx);
+fn unhandled_reconstruction_case_baq(mcode: u8, baq_bits: u8, thidx: u8) -> ! {
+    panic!(
+        "Unhandled reconstruction case: mcode={}, baq_bits={}, thidx={}",
+        mcode, baq_bits, thidx
+    );
 }
 
 #[inline(always)]

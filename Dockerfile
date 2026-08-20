@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Rust with stable toolchain
 # --default-toolchain stable already sets it as default, no need for rustup default stable
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable \
+    && /opt/rust/bin/rustup component add rustfmt
 
 ENV PATH="/opt/rust/bin:${PATH}"
 
