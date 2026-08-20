@@ -11,9 +11,9 @@ use std::collections::HashSet;
 /// Common choices are `u8`, `u16`, `i32`, or tuples like `(bool, u8)`.
 #[derive(Clone)]
 pub(crate) struct HuffmanCode<T> {
-    pub(crate) bits: u16,      // The bit pattern (right-aligned)
-    pub(crate) bit_len: u8,    // Number of bits in the code
-    pub(crate) symbol: T,      // The decoded symbol/magnitude value
+    pub(crate) bits: u16,   // The bit pattern (right-aligned)
+    pub(crate) bit_len: u8, // Number of bits in the code
+    pub(crate) symbol: T,   // The decoded symbol/magnitude value
 }
 
 /// A lookup table entry for Huffman decoding.
@@ -46,12 +46,18 @@ pub(crate) struct HuffmanDecodingState {
 impl HuffmanDecodingState {
     /// Create a new decoding state from bits and bit length.
     pub(crate) fn new(state_bits: u16, state_len: u8) -> Self {
-        Self { state_bits, state_len }
+        Self {
+            state_bits,
+            state_len,
+        }
     }
 
     /// Create a zero state (no leftover bits).
     pub(crate) fn zero() -> Self {
-        Self { state_bits: 0, state_len: 0 }
+        Self {
+            state_bits: 0,
+            state_len: 0,
+        }
     }
 
     /// Calculate state ID from leftover bits and bit length.
@@ -96,7 +102,6 @@ pub(crate) struct HuffmanDecoder<T> {
 pub(crate) type HuffmanDecoderSampleCode = HuffmanDecoder<(bool, u8)>;
 
 impl<T: Clone> HuffmanDecoder<T> {
-
     /// Build a lookup table decoder from a set of Huffman codes.
     ///
     /// This constructor:
@@ -132,7 +137,8 @@ impl<T: Clone> HuffmanDecoder<T> {
         }
 
         // Now build the lookup table
-        let max_state_id = states.iter()
+        let max_state_id = states
+            .iter()
             .map(|state| state.to_state_id())
             .max()
             .unwrap_or(0);
@@ -140,7 +146,8 @@ impl<T: Clone> HuffmanDecoder<T> {
         let mut lookup_table = Vec::with_capacity((max_state_id + 1) as usize);
 
         for _ in 0..=(max_state_id as usize) {
-            let arr: [HuffmanTableEntry<T>; 256] = std::array::from_fn(|_| HuffmanTableEntry::default());
+            let arr: [HuffmanTableEntry<T>; 256] =
+                std::array::from_fn(|_| HuffmanTableEntry::default());
             lookup_table.push(arr);
         }
 
@@ -151,7 +158,8 @@ impl<T: Clone> HuffmanDecoder<T> {
                 let bitstream = (state.state_bits as u32) << 8 | byte_val as u32;
                 let bitstream_len = state.state_len + 8;
 
-                let (symbols, leftover_state) = Self::read_bitstream_impl(bitstream, bitstream_len, &sorted_codes);
+                let (symbols, leftover_state) =
+                    Self::read_bitstream_impl(bitstream, bitstream_len, &sorted_codes);
 
                 let table_entry = HuffmanTableEntry::<T> {
                     symbols,
@@ -184,7 +192,11 @@ impl<T: Clone> HuffmanDecoder<T> {
     /// A tuple containing:
     /// - `Vec<T>`: Decoded symbols
     /// - `HuffmanDecodingState`: Leftover state (bits and bit length)
-    fn read_bitstream_impl(bitstream: u32, bitstream_len: u8, codes: &[HuffmanCode<T>]) -> (Vec<T>, HuffmanDecodingState) {
+    fn read_bitstream_impl(
+        bitstream: u32,
+        bitstream_len: u8,
+        codes: &[HuffmanCode<T>],
+    ) -> (Vec<T>, HuffmanDecodingState) {
         let mut bitstream = bitstream;
         let mut bitstream_len = bitstream_len;
         let mut symbols = Vec::new();
@@ -197,7 +209,8 @@ impl<T: Clone> HuffmanDecoder<T> {
                     // Extract the top 'code.bit_len' bits from the bitstream.
                     // We shift right by (bitstream_len - code.bit_len) to align the
                     // most significant bits, then mask to get exactly code.bit_len bits.
-                    let extracted = (bitstream >> (bitstream_len - code.bit_len)) & ((1 << code.bit_len) - 1);
+                    let extracted =
+                        (bitstream >> (bitstream_len - code.bit_len)) & ((1 << code.bit_len) - 1);
 
                     // Compare with code (both should be right-aligned)
                     if extracted as u16 == (code.bits & ((1 << code.bit_len) - 1)) {
@@ -216,7 +229,10 @@ impl<T: Clone> HuffmanDecoder<T> {
             }
         }
 
-        (symbols, HuffmanDecodingState::new(bitstream as u16, bitstream_len))
+        (
+            symbols,
+            HuffmanDecodingState::new(bitstream as u16, bitstream_len),
+        )
     }
 
     /// Decode a bitstream using this decoder's Huffman codes.
@@ -235,7 +251,11 @@ impl<T: Clone> HuffmanDecoder<T> {
     /// A tuple containing:
     /// - `Vec<T>`: Decoded symbols
     /// - `HuffmanDecodingState`: Leftover state (bits and bit length)
-    pub(crate) fn read_bitstream(&self, bitstream: u32, bitstream_len: u8) -> (Vec<T>, HuffmanDecodingState) {
+    pub(crate) fn read_bitstream(
+        &self,
+        bitstream: u32,
+        bitstream_len: u8,
+    ) -> (Vec<T>, HuffmanDecodingState) {
         Self::read_bitstream_impl(bitstream, bitstream_len, &self.huffman_tree)
     }
 
@@ -258,5 +278,4 @@ impl<T: Clone> HuffmanDecoder<T> {
         let table_entry = &self.entries[state_id as usize][byte as usize];
         (table_entry.symbols.clone(), table_entry.next_state)
     }
-
 }

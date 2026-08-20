@@ -3,8 +3,8 @@
 //! This module contains the core bypass decoder logic for Sentinel-1 packets.
 //! Bypass mode encodes samples as simple 10-bit signed integers (1 sign bit + 9 magnitude bits).
 
-use rayon::prelude::*;
 use num_complex::Complex32;
+use rayon::prelude::*;
 
 /// Convert a 10-bit unsigned integer to a signed integer.
 ///
@@ -70,7 +70,8 @@ fn decode_channel(
             if byte_idx + 2 >= data.len() {
                 return Err("Unexpected end of data when decoding channel".to_string());
             }
-            let s_code = ((data[byte_idx + 1] as u16) << 4 | (data[byte_idx + 2] as u16) >> 4) & 1023;
+            let s_code =
+                ((data[byte_idx + 1] as u16) << 4 | (data[byte_idx + 2] as u16) >> 4) & 1023;
             channel_samples.push(ten_bit_unsigned_to_signed_int(s_code) as f32);
             samples_processed += 1;
         } else {
@@ -82,7 +83,8 @@ fn decode_channel(
             if byte_idx + 3 >= data.len() {
                 return Err("Unexpected end of data when decoding channel".to_string());
             }
-            let s_code = ((data[byte_idx + 2] as u16) << 6 | (data[byte_idx + 3] as u16) >> 2) & 1023;
+            let s_code =
+                ((data[byte_idx + 2] as u16) << 6 | (data[byte_idx + 3] as u16) >> 2) & 1023;
             channel_samples.push(ten_bit_unsigned_to_signed_int(s_code) as f32);
             samples_processed += 1;
         } else {
@@ -94,7 +96,8 @@ fn decode_channel(
             if byte_idx + 4 >= data.len() {
                 return Err("Unexpected end of data when decoding channel".to_string());
             }
-            let s_code = ((data[byte_idx + 3] as u16) << 8 | (data[byte_idx + 4] as u16) >> 0) & 1023;
+            let s_code =
+                ((data[byte_idx + 3] as u16) << 8 | (data[byte_idx + 4] as u16) >> 0) & 1023;
             channel_samples.push(ten_bit_unsigned_to_signed_int(s_code) as f32);
             samples_processed += 1;
         } else {
@@ -125,10 +128,13 @@ fn decode_channel(
 ///
 /// A vector of complex numbers representing the decoded samples. The samples are interleaved:
 /// - `complex(IE[0], QE[0])`, `complex(IO[0], QO[0])`, `complex(IE[1], QE[1])`, `complex(IO[1], QO[1])`, ...
-pub fn decode_single_bypass_packet_inner(data: &[u8], num_quads: usize) -> Result<Vec<Complex32>, String> {
+pub fn decode_single_bypass_packet_inner(
+    data: &[u8],
+    num_quads: usize,
+) -> Result<Vec<Complex32>, String> {
     // Calculate the number of bytes per channel (aligned to 16-bit word boundary)
     // Each channel needs ceil((10 * num_quads) / 16) * 2 bytes
-    let num_words = ((num_quads * 10 + 15) / 16) as usize;  // Round up to next 16-bit word
+    let num_words = ((num_quads * 10 + 15) / 16) as usize; // Round up to next 16-bit word
     let num_bytes_per_channel = num_words * 2;
 
     // Decode IE channel (starts at byte 0)
@@ -146,8 +152,8 @@ pub fn decode_single_bypass_packet_inner(data: &[u8], num_quads: usize) -> Resul
     // Combine channels into interleaved complex samples: IE[i]+QE[i]j, IO[i]+QO[i]j, ...
     let mut complex_samples = Vec::with_capacity(ie.len() * 2);
     for i in 0..ie.len() {
-        complex_samples.push(Complex32::new(ie[i], qe[i]));  // IE[i] + QE[i]j
-        complex_samples.push(Complex32::new(io[i], qo[i]));  // IO[i] + QO[i]j
+        complex_samples.push(Complex32::new(ie[i], qe[i])); // IE[i] + QE[i]j
+        complex_samples.push(Complex32::new(io[i], qo[i])); // IO[i] + QO[i]j
     }
 
     Ok(complex_samples)
